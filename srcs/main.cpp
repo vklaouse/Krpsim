@@ -7,18 +7,22 @@ void usage() {
 int main(int ac, char **av) {
 	if (ac == 2)
 	{
-		std::ifstream *cFileStream;
-		cFileStream = new std::ifstream(av[1]);
-
-		if (cFileStream->fail()) {
-			std::cerr << "Wrong file path -> " << av[1] << std::endl;
+		Lexer toto = Lexer(av[1]);
+		std::vector<std::string> &errors = toto.getErrors();
+		std::vector<Token> &tokens = toto.getTokens();
+		if (errors.size() != 0) {
+			for (auto it = errors.begin(); it != errors.end(); it++) {
+				std::cout << (*it) << std::endl;
+			}
+			// for (auto it = tokens.begin(); it != tokens.end(); it++) {
+			// 	std::cout << (*it).type << " " << (*it).info << std::endl;
+			// }
+			return 0;
 		}
-		else {
-			Lexer toto = Lexer(cFileStream);
-			// delete toto;
-			(void)toto;
+		// do parse
+		for (auto it = tokens.begin(); it != tokens.end(); it++) {
+			std::cout << (*it).type << " " << (*it).info << std::endl;
 		}
-		delete cFileStream;
 	}
 	else
 		usage();

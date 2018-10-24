@@ -1,12 +1,42 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <sstream>
+	
+enum TokenType {
+	stock,
+	quantity,
+	operation,
+	needed_stock,
+	result_stock,
+	delay,
+	optimize
+};
+
+struct Token {
+	TokenType type;
+	std::string info;
+
+	Token(TokenType type, std::string info) : type(type), info(info) {};
+};
 
 class Lexer {
 
 public:
-	Lexer(std::ifstream *cFileStream);
+	Lexer(char *filePath);
 	~Lexer();
 
+	std::vector<std::string> &getErrors() { return errors; };
+	std::vector<Token> &getTokens() { return tokens; };
+
 private:
-	// std::ifstream *_cFileStream;
+	void createStock(std::string str, TokenType tokenType);
+	bool tokenizeStock(std::string *toParse, size_t i, TokenType tokenType);
+	void tokenizeGroupStock(size_t i, std::string groupStock, TokenType tokenType);
+	void addError(size_t index, std::string msg);
+
+	// bool succes;
+	std::ifstream *cFileStream;
+	std::vector<Token> tokens;
+	std::vector<std::string> errors;
 };
