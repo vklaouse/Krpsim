@@ -12,7 +12,7 @@ int main(int ac, char **av) {
 		std::vector<Token> &tokens = toto.getTokens();
 		if (errors.size() != 0) {
 			for (auto it = errors.begin(); it != errors.end(); it++) {
-				std::cout << (*it) << std::endl;
+				std::cerr << (*it) << std::endl;
 			}
 			// for (auto it = tokens.begin(); it != tokens.end(); it++) {
 			// 	std::cout << (*it).type << " " << (*it).info << std::endl;

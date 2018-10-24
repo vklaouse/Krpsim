@@ -8,6 +8,7 @@
         "stdexcept": "cpp",
         "typeinfo": "cpp",
         "algorithm": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "__locale": "cpp"
     }
 }
