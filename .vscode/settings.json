@@ -9,6 +9,8 @@
         "typeinfo": "cpp",
         "algorithm": "cpp",
         "string": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "vector": "cpp",
+        "iosfwd": "cpp"
     }
 }
