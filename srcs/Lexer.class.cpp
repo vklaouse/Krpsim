@@ -13,13 +13,12 @@ Lexer::Lexer(char *filePath) {
 	std::string sLine;
 	TokenType tokenType = stock;
 	// Parse stock
-	std::cout << "--- Stock --------" << std::endl;
-	for (size_t i = 0; std::getline(*cFileStream, sLine); i++) {
+	for (size_t i = 1; std::getline(*cFileStream, sLine); i++) {
+		std::cout << i << ": " << sLine << std::endl;
 		if (sLine.front() == '#') {
 			continue;
 		}
 
-		std::cout << sLine << std::endl;
 		size_t separatorCount = std::count(sLine.begin(), sLine.end(), ':');
 		if (tokenType == stock && separatorCount == 1) {
 			// stock
@@ -34,6 +33,7 @@ Lexer::Lexer(char *filePath) {
 			tokens.push_back(Token(operation, operationName));
 
 			sLine = sLine.substr(sLine.find(':'), sLine.size());
+			// if sLine.fir
 			if (!tokenizeStock(&sLine, i, needed_stock))
 				continue;		
 
@@ -52,8 +52,8 @@ Lexer::Lexer(char *filePath) {
 		}
 		else if (tokenType == operation && separatorCount == 1) {
 			// optimize
-			tokenizeOptimize(i, sLine);
 			tokenType = optimize;
+			tokenizeOptimize(i, sLine);
 		}
 		else {
 			std::string phase = (tokenType == stock) ? "stock" : (tokenType == operation) ? "operation" : "optimize";
@@ -78,6 +78,13 @@ bool Lexer::tokenizeStock(std::string *toParse, size_t i, TokenType tokenType) {
 		}
 		tokenizeGroupStock(i, toParse->substr(2, toParse->find(')') - 2), tokenType);
 		*toParse = toParse->substr(toParse->find(')') + 1, toParse->size());
+	}
+	else if (toParse->at(1) == ':') {
+		*toParse = toParse->substr(1, toParse->size());
+	}
+	else {
+		addError(i, "Wrong char after ':' char");
+		return false;
 	}
 	return true;
 }
@@ -131,7 +138,7 @@ bool Lexer::strIsAlNum(std::string str, size_t i) {
 		return false;
 	}
 	if (str.compare("time") == 0 || str.compare("optimize") == 0) {
-		addError(i, "Can not use 'time' or 'optimize' as name");
+		addError(i, "Wrong use of '" + str + "' keyword");
 		return false;
 	}
 	for (size_t index = 0; index < str.size(); index++) {
@@ -163,6 +170,7 @@ void Lexer::addError(size_t index, std::string msg) {
 }
 
 void Lexer::tokenizeOptimize(size_t i, std::string str) {
+	// std::cout << "======================================" << std::endl;
 	if (str.find(':') == std::string::npos) {
 		addError(i, "Missing ':'");
 		return ;
@@ -173,7 +181,7 @@ void Lexer::tokenizeOptimize(size_t i, std::string str) {
 		return ;
 	}
 	strOptimize = str.substr(str.find(':') + 1, str.size());
-	if (strOptimize.size() < 3 && strOptimize.front() != '(' && strOptimize.back() != ')') {
+	if (strOptimize.size() < 3 || strOptimize.front() != '(' || strOptimize.back() != ')') {
 		addError(i, "Missing 'optimize' parameters");
 		return ;
 	}
