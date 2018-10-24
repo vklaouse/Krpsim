@@ -36,6 +36,7 @@ private:
 	void addError(size_t index, std::string msg);
 	bool strIsInt(std::string str, size_t i);
 	bool strIsAlNum(std::string str, size_t i);
+	void addOptimizeToken(std::string str, size_t i);
 	void tokenizeOptimize(size_t i, std::string str);
 
 	// bool succes;

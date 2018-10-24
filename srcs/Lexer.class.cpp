@@ -30,7 +30,7 @@ Lexer::Lexer(char *filePath) {
 			tokenType = operation;
 			std::string operationName = sLine.substr(0, sLine.find(':'));
 			if (!strIsAlNum(operationName, i)) 
-				return ;
+				continue ;
 			tokens.push_back(Token(operation, operationName));
 
 			sLine = sLine.substr(sLine.find(':'), sLine.size());
@@ -45,9 +45,10 @@ Lexer::Lexer(char *filePath) {
 				addError(i, "Invalid char after first ':'");
 				continue;
 			}
+			sLine = sLine.substr(1, sLine.size());
 			if (!strIsInt(sLine, i)) 
-				return ;
-			tokens.push_back(Token(delay, sLine.substr(1, sLine.size())));
+				continue ;
+			tokens.push_back(Token(delay, sLine));
 		}
 		else if (tokenType == operation && separatorCount == 1) {
 			// optimize
@@ -102,7 +103,7 @@ void Lexer::tokenizeGroupStock(size_t i, std::string groupStock, TokenType token
 	// All good, can tokenize each elem individuall
 	while (1) {
 		if (groupStock.find(';') == std::string::npos) {
-			createStock(groupStock.substr(0, groupStock.size()), tokenType, i);
+			createStock(groupStock, tokenType, i);
 			break;
 		}
 		createStock(groupStock.substr(0, groupStock.find(';')), tokenType, i);
@@ -171,20 +172,39 @@ void Lexer::tokenizeOptimize(size_t i, std::string str) {
 		addError(i, "Missing 'optimize' keyword");
 		return ;
 	}
-	std::string strOptimize = str.substr(str.find(':') + 1, str.size());
+	strOptimize = str.substr(str.find(':') + 1, str.size());
 	if (strOptimize.size() < 3 && strOptimize.front() != '(' && strOptimize.back() != ')') {
 		addError(i, "Missing 'optimize' parameters");
 		return ;
 	}
 
-	std::string strOptimize = str.substr(1, str.size() - 1); // Get everything between '(' and ')'
-	std::cout << "Check vals: " << strOptimize << std::endl;
+	strOptimize = strOptimize.substr(1, strOptimize.size() - 2); // Get everything between '(' and ')'
 	while (1) {
 		if (strOptimize.find(';') == std::string::npos) {
-			// createStock(strOptimize.substr(0, strOptimize.size()), optimize, i);
+			addOptimizeToken(strOptimize, i);
 			break;
 		}
 		// createStock(strOptimize.substr(0, strOptimize.find(';')), optimize, i);
+		addOptimizeToken(strOptimize.substr(0, strOptimize.find(';')), i);
 		strOptimize = strOptimize.substr(strOptimize.find(';') + 1, strOptimize.size());
 	}
+}
+
+void Lexer::addOptimizeToken(std::string str, size_t i) {
+	if (str.size() == 0) {
+		addError(i, "Empty name");
+		return ;
+	}
+	if (str.compare("optimize") == 0) {
+		addError(i, "Can not use or 'optimize' as name");
+		return ;
+	}
+	for (size_t index = 0; index < str.size(); index++) {
+		if (str[index] != '_' && !std::isalnum(str[index])) {
+			addError(i, "Must be an alnum");
+			return ;
+		}
+	}
+	
+	tokens.push_back(Token(optimize, str));
 }
