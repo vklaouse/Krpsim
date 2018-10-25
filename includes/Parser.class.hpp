@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include "Krpsim.hpp"
 
 class Stock {
@@ -37,6 +38,7 @@ public:
     std::vector<Process> getProcess() { return vProcess; };
     
     void addToStock(std::string name, int quantity);
+    void addProcess(std::vector<Token> &tokens, size_t *i);
 
 private:
     std::vector<Stock> vStock;
