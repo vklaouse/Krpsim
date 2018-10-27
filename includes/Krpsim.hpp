@@ -4,7 +4,10 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
-	
+
+#define TIME_KEYWORD "time"
+#define OPTIMIZE_KEYWORD "optimize"
+
 enum TokenType {
 	stock,
 	quantity,

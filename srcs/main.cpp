@@ -22,6 +22,13 @@ int main(int ac, char **av) {
 		// 	std::cout << (*it).type << " " << (*it).info << std::endl;
 		// }
 		Parser parser = Parser(tokens);
+		errors = parser.getErrors();
+		if (errors.size() != 0) {
+			for (auto it = errors.begin(); it != errors.end(); it++) {
+				std::cerr << (*it) << std::endl;
+			}
+			return 0;
+		}
 		std::cout << "=====Stock=====" << std::endl;
 		for (size_t i = 0; i < parser.getStock().size(); i++) {
 			std::cout << "Name : " << parser.getStock()[i].name << " -> Quantity : " << parser.getStock()[i].quantity << std::endl;
@@ -29,6 +36,10 @@ int main(int ac, char **av) {
 		std::cout << "=====Process=====" << std::endl;
 		for (size_t i = 0; i < parser.getProcess().size(); i++) {
 			std::cout << "Name : " << parser.getProcess()[i].name << " -> Delay : " << parser.getProcess()[i].delay << std::endl;
+		}
+		std::cout << "=====Goals=====" << std::endl;
+		for (size_t i = 0; i < parser.getGoal().size(); i++) {
+			std::cout << "Name : " << parser.getGoal()[i].name << " -> Optimize time : " << parser.getGoal()[i].optimizeTime << std::endl;
 		}
 	}
 	else

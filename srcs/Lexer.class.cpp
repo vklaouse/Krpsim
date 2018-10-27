@@ -28,17 +28,17 @@ Lexer::Lexer(char *filePath) {
 			// operation
 			tokenType = operation;
 			std::string operationName = sLine.substr(0, sLine.find(':'));
-			if (!strIsAlNum(operationName, i)) 
+			if (!strIsAlNum(operationName, i))
 				continue ;
 			tokens.push_back(Token(operation, operationName));
 
 			sLine = sLine.substr(sLine.find(':'), sLine.size());
 			// if sLine.fir
 			if (!tokenizeStock(&sLine, i, needed_stock))
-				continue;		
+				continue;
 
 			if (!tokenizeStock(&sLine, i, result_stock))
-				continue;		
+				continue;
 
 			// tokenize process delay
 			if (sLine.front() != ':') {
@@ -46,7 +46,7 @@ Lexer::Lexer(char *filePath) {
 				continue;
 			}
 			sLine = sLine.substr(1, sLine.size());
-			if (!strIsInt(sLine, i)) 
+			if (!strIsInt(sLine, i))
 				continue ;
 			tokens.push_back(Token(delay, sLine));
 		}
@@ -137,7 +137,7 @@ bool Lexer::strIsAlNum(std::string str, size_t i) {
 		addError(i, "Empty name");
 		return false;
 	}
-	if (str.compare("time") == 0 || str.compare("optimize") == 0) {
+	if (str.compare(TIME_KEYWORD) == 0 || str.compare(OPTIMIZE_KEYWORD) == 0) {
 		addError(i, "Wrong use of '" + str + "' keyword");
 		return false;
 	}
@@ -153,9 +153,9 @@ bool Lexer::strIsAlNum(std::string str, size_t i) {
 void Lexer::createStock(std::string str, TokenType stockType, size_t i) {
 	std::string stockName = str.substr(0, str.find(':'));
 	std::string stockQnt = str.substr(str.find(':') + 1, str.size());
-	if (!strIsAlNum(stockName, i)) 
+	if (!strIsAlNum(stockName, i))
 		return ;
-	if (!strIsInt(stockQnt, i)) 
+	if (!strIsInt(stockQnt, i))
 		return ;
 	tokens.push_back(Token(stockType, stockName));
 	tokens.push_back(Token(quantity, stockQnt));
@@ -176,13 +176,13 @@ void Lexer::tokenizeOptimize(size_t i, std::string str) {
 		return ;
 	}
 	std::string strOptimize = str.substr(0, str.find(':'));
-	if (strOptimize.compare("optimize") != 0) {
-		addError(i, "Missing 'optimize' keyword");
+	if (strOptimize.compare(OPTIMIZE_KEYWORD) != 0) {
+		addError(i, std::string("Missing '") + OPTIMIZE_KEYWORD + "' keyword");
 		return ;
 	}
 	strOptimize = str.substr(str.find(':') + 1, str.size());
 	if (strOptimize.size() < 3 || strOptimize.front() != '(' || strOptimize.back() != ')') {
-		addError(i, "Missing 'optimize' parameters");
+		addError(i, std::string("Missing '") + OPTIMIZE_KEYWORD + "' parameters");
 		return ;
 	}
 
@@ -203,8 +203,8 @@ void Lexer::addOptimizeToken(std::string str, size_t i) {
 		addError(i, "Empty name");
 		return ;
 	}
-	if (str.compare("optimize") == 0) {
-		addError(i, "Can not use or 'optimize' as name");
+	if (str.compare(OPTIMIZE_KEYWORD) == 0) {
+		addError(i, std::string("Can not use or '") + OPTIMIZE_KEYWORD + "' as name");
 		return ;
 	}
 	for (size_t index = 0; index < str.size(); index++) {
@@ -213,6 +213,6 @@ void Lexer::addOptimizeToken(std::string str, size_t i) {
 			return ;
 		}
 	}
-	
+
 	tokens.push_back(Token(optimize, str));
 }
