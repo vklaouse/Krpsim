@@ -50,6 +50,8 @@ public:
     std::vector<Goal> getGoal() { return vGoal; };
 	std::vector<std::string> &getErrors() { return errors; };
 
+    void runSimlation(int lifeTime);
+
 private:
     void addToStock(std::string name, int quantity);
     size_t addProcess(std::vector<Token> &tokens, size_t i);

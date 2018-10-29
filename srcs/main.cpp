@@ -65,7 +65,7 @@ int main(int ac, char **av) {
 		for (size_t i = 0; i < parser.getGoal().size(); i++) {
 			std::cout << "Name : " << parser.getGoal()[i].name << " -> Optimize time : " << parser.getGoal()[i].optimizeTime << std::endl;
 		}
-		// parser.runSimlation();
+		parser.runSimlation(lifeTime);
 	}
 	else {
 		std::cerr << "Wrong number of parameters" << std::endl;

@@ -183,3 +183,10 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 	*myInt = static_cast<int>(tmpVal);
 	return true;
 }
+
+void Parser::runSimlation(int lifeTime) {
+    time_t timer = time(NULL);
+    for (;time(NULL) < timer + lifeTime;) {
+        std::cout << " Coucou " << std::endl;
+    }
+}
