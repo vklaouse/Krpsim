@@ -51,8 +51,8 @@ public:
 
 private:
     void addToStock(std::string name, int quantity);
-    void addProcess(std::vector<Token> &tokens, size_t *i);
-    void addGoal(std::vector<Token> &tokens, size_t i);
+    size_t addProcess(std::vector<Token> &tokens, size_t i);
+    size_t addGoal(std::vector<Token> &tokens, size_t i);
 	bool saveStrInInt(std::string &str, int *myInt);
 
     std::vector<Stock> vStock;
