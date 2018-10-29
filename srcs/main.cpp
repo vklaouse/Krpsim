@@ -26,6 +26,7 @@ void usage() {
 int main(int ac, char **av) {
 	if (ac == 3)
 	{
+		srand(clock());
 		int lifeTime = verifyLifeTime(av[2]);
 		if (lifeTime == -1) {
 			std::cerr << "Lifetime must be positive int" << std::endl;

@@ -11,6 +11,11 @@
         "string": "cpp",
         "__locale": "cpp",
         "vector": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "__split_buffer": "cpp",
+        "iostream": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "map": "cpp"
     }
 }

@@ -3,6 +3,9 @@
 #include <stdexcept>
 #include "Krpsim.hpp"
 
+#define GEN_SIZE 3
+#define GEN_LENGTH 4
+
 struct Process;
 
 struct Stock {
@@ -18,16 +21,14 @@ public:
 struct Process {
 
 public:
-    Process(std::string name, std::vector<Stock> neededStock, std::vector<Stock> resultStock, int delay) :
-        name(name), neededStock(neededStock), resultStock(resultStock), delay(delay), activeProcess(std::vector<int>()), priority(0)
+    Process(std::string name, std::map<std::string, int> neededStock, std::map<std::string, int> resultStock, int delay) :
+        name(name), neededStock(neededStock), resultStock(resultStock), delay(delay)
         {};
     ~Process() {};
     std::string name;
-    std::vector<Stock> neededStock;
-    std::vector<Stock> resultStock;
+    std::map<std::string, int> neededStock;
+    std::map<std::string, int> resultStock;
     int delay;
-    std::vector<int> activeProcess;
-    int priority;
 };
 
 struct Goal {
@@ -37,6 +38,26 @@ public:
 
 	std::string name;
 	bool optimizeTime;
+};
+
+struct ProcessInfo {
+public:
+    ProcessInfo() {};
+    ProcessInfo(int multiplier, int delay) : multiplier(multiplier), delay(delay) {};
+    ~ProcessInfo() {};
+    int multiplier;
+    int delay;
+};
+
+struct CycleSnapshot {
+public:
+	CycleSnapshot(int actualCycle, std::map<std::string, ProcessInfo> vProcess, std::map<std::string, int> vStock)
+     : actualCycle(actualCycle), activeProcess(vProcess), currentStock(vStock) {} ;
+	~CycleSnapshot() {};
+    int actualCycle;
+    std::map<std::string, ProcessInfo> activeProcess;
+    std::map<std::string, int> currentStock;
+    CycleSnapshot *prev;  
 };
 
 class Parser {
@@ -58,10 +79,14 @@ private:
     void addProcessReferenceToStock(std::string stockName, Process*newProcess);
     size_t addGoal(std::vector<Token> &tokens, size_t i);
 	bool saveStrInInt(std::string &str, int *myInt);
+    void createFirstGen();
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;
     std::vector<Goal> vGoal;
 	std::vector<std::string> errors;
+
+    std::vector<CycleSnapshot> actualGen;
+    std::vector<CycleSnapshot> childGen;
 
 };

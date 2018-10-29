@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <map>
 
 #define TIME_KEYWORD "time"
 #define OPTIMIZE_KEYWORD "optimize"

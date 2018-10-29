@@ -22,13 +22,13 @@ Parser::Parser(std::vector<Token> &tokens) {
         for (auto it2 = it->neededStock.begin(); it2 != it->neededStock.end(); it2++) {
             bool stockExist = false;
             for (auto it3 = vStock.begin(); it3 != vStock.end(); it3++) {
-                if (it3->name.compare(it2->name) == 0) {
+                if (it3->name.compare(it2->first) == 0) {
                     stockExist = true;
                     break;
                 }
             }
             if (!stockExist) {
-                errors.push_back("Parser Error: No way to have at least one '" + it2->name + "' in '" + it->name + "' process !");
+                errors.push_back("Parser Error: No way to have at least one '" + it2->first + "' in '" + it->name + "' process !");
             }
         }
     }
@@ -60,7 +60,7 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
     ++i;
     std::string stockName;
     int quantity;
-    std::vector<Stock> neededStock = std::vector<Stock>();
+    std::map<std::string, int> neededStock = std::map<std::string, int>();
     while (tokens[i].type == needed_stock) {
         stockName = tokens[i].info;
         ++i;
@@ -69,37 +69,32 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
         ++i;
 
         // Check that stock is not already inside
-        for (auto it = neededStock.begin(); it != neededStock.end(); it++) {
-            if (it->name.compare(stockName) == 0) {
-                errors.push_back("Parser error: Stock with name '" + stockName + "' given twice in '" + name + "' process !");
-				return i;
-            }
+        if (neededStock.find(stockName) != neededStock.end()) {
+            errors.push_back("Parser error: Stock with name '" + stockName + "' given twice in '" + name + "' process !");
+            return i;
         }
         if (quantity == 0) // skip if stock is not actually involved in process
             continue;
 
-        neededStock.push_back(Stock(stockName, quantity));
+        neededStock[stockName] = quantity;
     }
 
-    std::vector<Stock> resultStock = std::vector<Stock>();
+    std::map<std::string, int> resultStock = std::map<std::string, int>();
     while (tokens[i].type == result_stock) {
         stockName = tokens[i].info;
         ++i;
 		if (saveStrInInt(tokens[i].info, &quantity) == false)
 			return i;
         ++i;
-
         // Check that stock is not already inside
-        for (auto it = resultStock.begin(); it != resultStock.end(); it++) {
-            if (it->name.compare(stockName) == 0) {
-                errors.push_back("Parser Error: Stock with name '" + stockName + "' produced twice in '" + name + "' process !");
-				return i;
-            }
+        if (resultStock.find(stockName) != resultStock.end()) {
+            errors.push_back("Parser Error: Stock with name '" + stockName + "' produced twice in '" + name + "' process !");
+            return i;
         }
         if (quantity == 0) // skip if stock is not actually involved in process
             continue;
 
-        resultStock.push_back(Stock(stockName, quantity));
+        resultStock[stockName] = quantity;
     }
 
 	int delay;
@@ -108,7 +103,7 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
         vProcess.push_back(newProcess);
 
         for (auto it = newProcess.resultStock.begin(); it != newProcess.resultStock.end(); it++) {
-            addProcessReferenceToStock(it->name, &newProcess);
+            addProcessReferenceToStock(it->first, &newProcess);
         }
     }
     return i;
@@ -185,8 +180,58 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 }
 
 void Parser::runSimlation(int lifeTime) {
-    time_t timer = time(NULL);
-    for (;time(NULL) < timer + lifeTime;) {
-        std::cout << " Coucou " << std::endl;
+    clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
+    size_t i = 0;
+
+    // Find best path using genetic algo
+    // 1) Create Initial population
+    createFirstGen();
+    while (clock() < killTime) {
+        // 2) Rank solutions
+
+        // 2.1) Keep best
+
+        // 3) Cross Over
+        // 3bis) Mutation
+
+        // 4) Rank new childs
+        // 4.1) Keep best childs and add to 2.1
+    }
+
+    // Print best path
+    std::cout << i << std::endl;
+}
+
+void Parser::createFirstGen() {
+    
+    std::map<std::string, int> startStock = std::map<std::string, int>();
+
+    for (auto it = vStock.begin(); it != vStock.end(); it++) {
+        if (it->quantity > 0) {
+            startStock[it->name] = it->quantity;
+        }
+    }
+
+    std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
+    std::map<std::string, int> tmpStock = std::map<std::string, int>();
+    for (size_t i = 0; i < GEN_SIZE; i++) {
+        for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
+            int maxDoable = std::numeric_limits<int>::max();
+            for (auto needStock = process->neededStock.begin(); needStock != process->neededStock.end(); needStock++) {
+                if (startStock[needStock->first] < needStock->second) {
+                    maxDoable = 0;
+                    break ;
+                }
+                // TODO: update maxDoable
+            }
+            if (maxDoable > 0) // TODO: take random number between 1 and maxDoable
+                tmpProcess[process->name] = ProcessInfo(maxDoable, process->delay);
+        }
+
+        CycleSnapshot firstPeople = CycleSnapshot(0, tmpProcess, startStock);
+        for (size_t j = 0; j < GEN_LENGTH; j++) {
+        
+        }
+        actualGen.push_back(firstPeople);
     }
 }
