@@ -3,14 +3,16 @@
 #include <stdexcept>
 #include "Krpsim.hpp"
 
+struct Process;
+
 struct Stock {
 
 public:
-    Stock(std::string name, int quantity) : name(name), quantity(quantity) {};
+    Stock(std::string name, int quantity) : name(name), quantity(quantity) { std::vector<Process*> waysToProduce = std::vector<Process*>(); };
     ~Stock() {};
     std::string name;
     int quantity;
-
+    std::vector<Process*> waysToProduce;
 };
 
 struct Process {
@@ -26,7 +28,6 @@ public:
     int delay;
     std::vector<int> activeProcess;
     int priority;
-
 };
 
 struct Goal {
@@ -52,6 +53,7 @@ public:
 private:
     void addToStock(std::string name, int quantity);
     size_t addProcess(std::vector<Token> &tokens, size_t i);
+    void addProcessReferenceToStock(std::string stockName, Process*newProcess);
     size_t addGoal(std::vector<Token> &tokens, size_t i);
 	bool saveStrInInt(std::string &str, int *myInt);
 

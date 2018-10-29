@@ -16,7 +16,22 @@ Parser::Parser(std::vector<Token> &tokens) {
 		    i = addGoal(tokens, i);
         }
     }
-    return ;
+
+    // that process required stock can actually be produced
+    for (auto it = vProcess.begin(); it != vProcess.end(); it++) {
+        for (auto it2 = it->neededStock.begin(); it2 != it->neededStock.end(); it2++) {
+            bool stockExist = false;
+            for (auto it3 = vStock.begin(); it3 != vStock.end(); it3++) {
+                if (it3->name.compare(it2->name) == 0) {
+                    stockExist = true;
+                    break;
+                }
+            }
+            if (!stockExist) {
+                errors.push_back("Parser Error: No way to have at least one '" + it2->name + "' in '" + it->name + "' process !");
+            }
+        }
+    }
 }
 
 Parser::~Parser() {
@@ -88,9 +103,28 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
     }
 
 	int delay;
-	if (saveStrInInt(tokens[i].info, &delay))
-        vProcess.push_back(Process(name, neededStock, resultStock, delay));
+	if (saveStrInInt(tokens[i].info, &delay)) {
+        Process newProcess = Process(name, neededStock, resultStock, delay);
+        vProcess.push_back(newProcess);
+
+        for (auto it = newProcess.resultStock.begin(); it != newProcess.resultStock.end(); it++) {
+            addProcessReferenceToStock(it->name, &newProcess);
+        }
+    }
     return i;
+}
+
+
+void Parser::addProcessReferenceToStock(std::string stockName, Process *newProcess) {
+    for (auto it = vStock.begin(); it != vStock.end(); it++) {
+        if (it->name.compare(stockName) == 0) {
+            it->waysToProduce.push_back(newProcess);
+            return;
+        }
+    }
+    Stock newStock = Stock(stockName, 0);
+    newStock.waysToProduce.push_back(newProcess);
+    vStock.push_back(newStock);
 }
 
 size_t Parser::addGoal(std::vector<Token> &tokens, size_t i) {
@@ -108,7 +142,7 @@ size_t Parser::addGoal(std::vector<Token> &tokens, size_t i) {
         }
     }
 
-    // Check that stock is not already inside
+    // Check that stock is not already inside optimize
     for (auto it = vGoal.begin(); it != vGoal.end(); it++) {
         if (it->name.compare(tokens[i].info) == 0) {
             errors.push_back("Parser Error: '" + tokens[i].info + "' stock given twice in optimize !");
@@ -116,7 +150,19 @@ size_t Parser::addGoal(std::vector<Token> &tokens, size_t i) {
         }
     }
 
-    vGoal.push_back(Goal(tokens[i].info, optimizeTime));
+    // Check if goal exist
+    bool stockExist = false;
+    for (auto it = vStock.begin(); it != vStock.end(); it++) {
+        if (it->name.compare(tokens[i].info) == 0) {
+            stockExist = true;
+            break;
+        }
+    }
+    if (!stockExist) {
+        errors.push_back("Parser Error: No way to have at least one '" + tokens[i].info + "' in your stocks !");
+    }
+    else
+        vGoal.push_back(Goal(tokens[i].info, optimizeTime));
     return i;
 }
 
