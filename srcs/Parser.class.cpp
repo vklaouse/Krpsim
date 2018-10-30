@@ -283,8 +283,8 @@ void Parser::createGoodsLeaderboard() {
 			// wantedGoods[stockInfo->name] = -5;
 		}
 	}
-    std::cout << std::endl << "--- Goods Ratings" << std::endl;
-	for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
-		std::cout << test->first << " rating: " << test->second << std::endl;
-	}
+    // std::cout << std::endl << "--- Goods Ratings" << std::endl;
+	// for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
+	// 	std::cout << test->first << " rating: " << test->second << std::endl;
+	// }
 }
