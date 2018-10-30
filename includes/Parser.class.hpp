@@ -49,7 +49,7 @@ public:
     ~Parser();
 
     std::vector<Stock> getStock() { return vStock; };
-    std::vector<Process> getProcess() { return vProcess; };
+    std::vector<Process> &getProcess() { return vProcess; };
     std::vector<Goal> getGoal() { return vGoal; };
 	std::vector<std::string> &getErrors() { return errors; };
 	std::map<std::string, int> &getStartStock() { return startStock; };

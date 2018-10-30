@@ -42,10 +42,6 @@ int main(int ac, char **av) {
 			}
 			return 0;
 		}
-		// do parse
-		// for (auto it = tokens.begin(); it != tokens.end(); it++) {
-		// 	std::cout << (*it).type << " " << (*it).info << std::endl;
-		// }
 		Parser parser = Parser(tokens);
 		errors = parser.getErrors();
 		if (errors.size() != 0) {
