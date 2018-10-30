@@ -1,6 +1,6 @@
 NAME = krpsim
 
-SRC = main.cpp Lexer.class.cpp Parser.class.cpp
+SRC = main.cpp Lexer.class.cpp Parser.class.cpp DNA.class.cpp
 
 OBJ = $(addprefix $(O_DIR)/,$(SRC:.cpp=.o))
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdexcept>
 #include "Krpsim.hpp"
+#include "DNA.class.hpp"
 
 #define GEN_SIZE 3
 #define GEN_LENGTH 4
@@ -40,29 +40,11 @@ public:
 	bool optimizeTime;
 };
 
-struct ProcessInfo {
-public:
-    ProcessInfo() {};
-    ProcessInfo(int multiplier, int delay) : multiplier(multiplier), delay(delay) {};
-    ~ProcessInfo() {};
-    int multiplier;
-    int delay;
-};
-
-struct CycleSnapshot {
-public:
-	CycleSnapshot(int actualCycle, std::map<std::string, ProcessInfo> vProcess, std::map<std::string, int> vStock)
-     : actualCycle(actualCycle), activeProcess(vProcess), currentStock(vStock) {} ;
-	~CycleSnapshot() {};
-    int actualCycle;
-    std::map<std::string, ProcessInfo> activeProcess;
-    std::map<std::string, int> currentStock;
-    CycleSnapshot *prev;  
-};
-
 class Parser {
 
 public:
+    static Parser *instance;
+
     Parser(std::vector<Token> &tokens);
     ~Parser();
 
@@ -70,6 +52,7 @@ public:
     std::vector<Process> getProcess() { return vProcess; };
     std::vector<Goal> getGoal() { return vGoal; };
 	std::vector<std::string> &getErrors() { return errors; };
+	std::map<std::string, int> &getStartStock() { return startStock; };
 
     void runSimlation(int lifeTime);
 
@@ -86,7 +69,8 @@ private:
     std::vector<Goal> vGoal;
 	std::vector<std::string> errors;
 
-    std::vector<CycleSnapshot> actualGen;
-    std::vector<CycleSnapshot> childGen;
+    std::map<std::string, int> startStock;
+    std::vector<DNA> actualGen;
+    std::vector<DNA> childGen;
 
 };

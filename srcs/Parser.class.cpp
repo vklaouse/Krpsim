@@ -1,5 +1,7 @@
 #include "Parser.class.hpp"
 
+Parser *Parser::instance;
+
 Parser::Parser(std::vector<Token> &tokens) {
 	int quantity;
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -31,6 +33,10 @@ Parser::Parser(std::vector<Token> &tokens) {
                 errors.push_back("Parser Error: No way to have at least one '" + it2->first + "' in '" + it->name + "' process !");
             }
         }
+    }
+
+    if (errors.size() == 0) {
+        Parser::instance = this;
     }
 }
 
@@ -204,7 +210,7 @@ void Parser::runSimlation(int lifeTime) {
 
 void Parser::createFirstGen() {
     
-    std::map<std::string, int> startStock = std::map<std::string, int>();
+    startStock = std::map<std::string, int>();
 
     for (auto it = vStock.begin(); it != vStock.end(); it++) {
         if (it->quantity > 0) {
@@ -212,26 +218,29 @@ void Parser::createFirstGen() {
         }
     }
 
-    std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
-    std::map<std::string, int> tmpStock = std::map<std::string, int>();
+    // std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
+    // std::map<std::string, int> tmpStock = std::map<std::string, int>();
     for (size_t i = 0; i < GEN_SIZE; i++) {
-        for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
-            int maxDoable = std::numeric_limits<int>::max();
-            for (auto needStock = process->neededStock.begin(); needStock != process->neededStock.end(); needStock++) {
-                if (startStock[needStock->first] < needStock->second) {
-                    maxDoable = 0;
-                    break ;
-                }
-                // TODO: update maxDoable
-            }
-            if (maxDoable > 0) // TODO: take random number between 1 and maxDoable
-                tmpProcess[process->name] = ProcessInfo(maxDoable, process->delay);
-        }
+        DNA newDNA = DNA();
+        // newDNA.createGenesSequence();
 
-        CycleSnapshot firstPeople = CycleSnapshot(0, tmpProcess, startStock);
-        for (size_t j = 0; j < GEN_LENGTH; j++) {
+        // for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
+        //     int maxDoable = std::numeric_limits<int>::max();
+        //     for (auto needStock = process->neededStock.begin(); needStock != process->neededStock.end(); needStock++) {
+        //         if (startStock[needStock->first] < needStock->second) {
+        //             maxDoable = 0;
+        //             break ;
+        //         }
+        //         // TODO: update maxDoable
+        //     }
+        //     if (maxDoable > 0) // TODO: take random number between 1 and maxDoable
+        //         tmpProcess[process->name] = ProcessInfo(maxDoable, process->delay);
+        // }
+
+        // CycleSnapshot firstPeople = CycleSnapshot(0, tmpProcess, startStock);
+        // for (size_t j = 0; j < GEN_LENGTH; j++) {
         
-        }
-        actualGen.push_back(firstPeople);
+        // }
+        // actualGen.push_back(firstPeople);
     }
 }

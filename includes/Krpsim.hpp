@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <stdexcept>
 
 #define TIME_KEYWORD "time"
 #define OPTIMIZE_KEYWORD "optimize"
