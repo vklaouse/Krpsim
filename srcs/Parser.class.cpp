@@ -119,12 +119,12 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
 void Parser::addProcessReferenceToStock(std::string stockName, Process *newProcess) {
     for (auto it = vStock.begin(); it != vStock.end(); it++) {
         if (it->name.compare(stockName) == 0) {
-            it->waysToProduce.push_back(newProcess);
+            it->waysToProduce.push_back(newProcess->name);
             return;
         }
     }
     Stock newStock = Stock(stockName, 0);
-    newStock.waysToProduce.push_back(newProcess);
+    newStock.waysToProduce.push_back(newProcess->name);
     vStock.push_back(newStock);
 }
 
@@ -189,6 +189,8 @@ void Parser::runSimlation(int lifeTime) {
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
     size_t i = 0;
 
+    createGoodsLeaderboard();
+
     // Find best path using genetic algo
     // 1) Create Initial population
     createFirstGen();
@@ -213,9 +215,9 @@ void Parser::createFirstGen() {
     startStock = std::map<std::string, int>();
 
     for (auto it = vStock.begin(); it != vStock.end(); it++) {
-        if (it->quantity > 0) {
+        // if (it->quantity > 0) {
             startStock[it->name] = it->quantity;
-        }
+        // }
     }
 
     // std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
@@ -243,4 +245,46 @@ void Parser::createFirstGen() {
         // }
         // actualGen.push_back(firstPeople);
     }
+}
+
+void Parser::createGoodsLeaderboard() {
+    wantedGoods = std::map<std::string, int>();
+	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
+		wantedGoods[goal->name] = 100;
+	}
+	// TODO: Give points to intermediary products
+	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
+		for (auto stockInfo = vStock.begin(); stockInfo != vStock.end(); stockInfo++) {
+			if (stockInfo->name.compare(goal->name) == 0) {
+				for (auto processName = stockInfo->waysToProduce.begin(); processName != stockInfo->waysToProduce.end(); processName++) {
+                    for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
+                        if (process->name.compare(*processName) == 0) {
+                            // std::cout << "Check2A " << process->name << " size: " << process->neededStock.size() << std::endl;
+                            for (const auto &neededGood : process->neededStock) {
+                                // std::cout << "- " << neededGood.first << std::endl;
+                                if (wantedGoods.find(neededGood.first) == wantedGoods.end()) {
+                                    wantedGoods[neededGood.first] = 2;
+                                }
+                                else if (wantedGoods[neededGood.first] < 9)
+                                    wantedGoods[neededGood.first] += 1;
+                            }
+
+                            break;
+                        }
+                    }
+				}
+			}
+		}
+	}
+	// TODO: Malus for not useful stuff
+	for (auto stockInfo = vStock.begin(); stockInfo != vStock.end(); stockInfo++) {
+		if (wantedGoods.find(stockInfo->name) == wantedGoods.end()) {
+			wantedGoods[stockInfo->name] = 0;
+			// wantedGoods[stockInfo->name] = -5;
+		}
+	}
+    std::cout << std::endl << "--- Goods Ratings" << std::endl;
+	for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
+		std::cout << test->first << " rating: " << test->second << std::endl;
+	}
 }

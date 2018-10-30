@@ -15,7 +15,7 @@ public:
     ~Stock() {};
     std::string name;
     int quantity;
-    std::vector<Process*> waysToProduce;
+    std::vector<std::string> waysToProduce;
 };
 
 struct Process {
@@ -52,7 +52,8 @@ public:
     std::vector<Process> &getProcess() { return vProcess; };
     std::vector<Goal> getGoal() { return vGoal; };
 	std::vector<std::string> &getErrors() { return errors; };
-	std::map<std::string, int> &getStartStock() { return startStock; };
+	std::map<std::string, int> getStartStock() { return startStock; };
+	std::map<std::string, int> &getWantedGoods() { return wantedGoods; };
 
     void runSimlation(int lifeTime);
 
@@ -63,6 +64,7 @@ private:
     size_t addGoal(std::vector<Token> &tokens, size_t i);
 	bool saveStrInInt(std::string &str, int *myInt);
     void createFirstGen();
+    void createGoodsLeaderboard();
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;
@@ -70,6 +72,7 @@ private:
 	std::vector<std::string> errors;
 
     std::map<std::string, int> startStock;
+	std::map<std::string, int> wantedGoods;
     std::vector<DNA> actualGen;
     std::vector<DNA> childGen;
 

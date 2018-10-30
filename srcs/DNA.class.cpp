@@ -88,6 +88,8 @@ int Gene::doableProcessNbr(std::string name, std::map<std::string, int> tmpCurre
 
 DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
 	Gene firstGene = Gene(0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock());
+	vGene.push_back(firstGene);
+	evalFitness();
 }
 
 // void DNA::createGenesSequence(std::vector<Gene> startingGenes, std::map<std::string, int> startStock) {
@@ -96,5 +98,44 @@ DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
 // }
 
 void DNA::evalFitness() {
+	// std::cout << std::endl << "--- " << std::endl;
+	fitness = 0;
+	std::map<std::string, int> currentStock = vGene.back().currentStock;
+	// Give lots of points if an optimize product is in stock
+	// for (auto goal = Parser::instance->getGoal().begin(); goal != Parser::instance->getGoal().end(); goal++) {
+	// 	if (currentStock[goal->name] > 0) {
+	// 		auto it = Parser::instance->getStartStock().find(goal->name);
+	// 		if (it != Parser::instance->getStartStock().end()) {
+	// 			if (currentStock[goal->name] > it->second)
+	// 				fitness += sqrt(currentStock[goal->name] - it->second) * 10;
+	// 		}
+	// 		else {
+	// 			fitness += sqrt(currentStock[goal->name]) * 10; // give more points if goal is in stock 5 times and not only once, but with a slow curve
+	// 		}
+	// 	}
+	// }
+	// std::cout << "Score for optimize goals reached: " << fitness << std::endl;
 
+	// TODO: Give some points if intermediary products are in stock (the closest the product is to the goal, the higher the points)
+	// Create leaderboard for most wanted obj
+
+	// Score based on current stock * rarity
+	for (auto good = currentStock.begin(); good != currentStock.end(); good++) {
+		// Skip good if dont have any or less than when started
+		if (good->second <= Parser::instance->getStartStock()[good->first])
+			continue;
+		// Use sqrt so that producing 365 days is still less important than having one year
+		fitness += sqrt(good->second) * Parser::instance->getWantedGoods()[good->first];
+	}
+
+
+	// TODO: Give some points for active process
+
+	// TODO: Give some points if initial stock is here but not goals
+
+	// TODO: Give max points if initial stock AND goals are here => we are in a positive loop!
+
+	// Make fitness exponential so that little improvements weight more
+	fitness = pow(fitness, 2);
+	// std::cout << "Fitness " << fitness << std::endl;
 }
