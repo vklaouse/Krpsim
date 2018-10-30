@@ -9,7 +9,7 @@ public:
     Gene(int actualCycle, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock);
     ~Gene() {};
 
-    void doableProcessGene(int index, std::vector<std::string> doableProcess);
+    void doableProcessGene(int index, std::vector<std::string> &doableProcess);
 	int doableProcessNbr(std::string name, std::map<std::string, int> tmpCurrentStock);
 	bool applyProcessToStock(std::string name, std::map<std::string, int> * stock);
 
