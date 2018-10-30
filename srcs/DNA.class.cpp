@@ -28,12 +28,12 @@ Gene::Gene(int actualCycle, std::map<std::string, std::vector<int> > vProcess, s
 }
 
 void Gene::doableProcessGene(int index, std::vector<std::string> doableProcess) {
-	int doable;
-	int random;
-    if (Gene::loopDirection) {
-        // for (int i = index; i != index; --i) {
-        //     if (i <= 0)
-        //         i = doableProcess.size();
+	// int doable;
+	// int random;
+    // if (Gene::loopDirection) {
+        for (int i = index; i != index; --i) {
+            if (i <= 0)
+                i = doableProcess.size();
 		// 	doable = doableProcessNbr(doableProcess[i], currentStock);
 		// 	std::cout << doableProcess[i] << " : " << doable << std::endl;
 		// 	if (doable > 0) {
@@ -42,10 +42,10 @@ void Gene::doableProcessGene(int index, std::vector<std::string> doableProcess) 
 		// 			applyProcessToStock(doableProcess[i], &currentStock);
 		// 		}
 		// 	}
-        // }
-        Gene::loopDirection = false;
-        return ;
-    }
+        }
+        // Gene::loopDirection = false;
+        // return ;
+    // }
 	// for (int i = index; i != index; --i) {
 	// 	if (i <= 0)
 	// 		i = doableProcess.size();
@@ -58,7 +58,7 @@ void Gene::doableProcessGene(int index, std::vector<std::string> doableProcess) 
 	// 		}
 	// 	}
 	// }
-    Gene::loopDirection = true;
+//     Gene::loopDirection = true;
 }
 
 bool Gene::applyProcessToStock(std::string name, std::map<std::string, int> * stock) {
@@ -94,3 +94,7 @@ DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
 //     // genes = startingGenes;
 //     // currentStock = startStock;
 // }
+
+void DNA::evalFitness() {
+
+}

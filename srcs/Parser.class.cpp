@@ -209,7 +209,7 @@ void Parser::runSimlation(int lifeTime) {
 }
 
 void Parser::createFirstGen() {
-    
+
     startStock = std::map<std::string, int>();
 
     for (auto it = vStock.begin(); it != vStock.end(); it++) {
@@ -239,7 +239,7 @@ void Parser::createFirstGen() {
 
         // CycleSnapshot firstPeople = CycleSnapshot(0, tmpProcess, startStock);
         // for (size_t j = 0; j < GEN_LENGTH; j++) {
-        
+
         // }
         // actualGen.push_back(firstPeople);
     }

@@ -26,6 +26,7 @@ public:
     ~DNA() {};
 
     int getFitness() { return fitness; };
+	void evalFitness();
     // void createGenesSequence(std::vector<Gene> startingGenes, std::map<std::string, int> startStock);
 
 private:
