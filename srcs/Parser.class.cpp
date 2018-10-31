@@ -2,7 +2,7 @@
 
 Parser *Parser::instance;
 
-Parser::Parser(std::vector<Token> &tokens) {
+Parser::Parser(std::vector<Token> &tokens) : myRandom(rand()) {
 	int quantity;
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == stock) {
@@ -20,17 +20,17 @@ Parser::Parser(std::vector<Token> &tokens) {
     }
 
     // that process required stock can actually be produced
-    for (auto it = vProcess.begin(); it != vProcess.end(); it++) {
-        for (auto it2 = it->neededStock.begin(); it2 != it->neededStock.end(); it2++) {
+    for (const auto &it : vProcess) {
+        for (const auto &it2 : it.neededStock) {
             bool stockExist = false;
-            for (auto it3 = vStock.begin(); it3 != vStock.end(); it3++) {
-                if (it3->name.compare(it2->first) == 0) {
+            for (const auto &it3 : vStock) {
+                if (it3.name.compare(it2.first) == 0) {
                     stockExist = true;
                     break;
                 }
             }
             if (!stockExist) {
-                errors.push_back("Parser Error: No way to have at least one '" + it2->first + "' in '" + it->name + "' process !");
+                errors.push_back("Parser Error: No way to have at least one '" + it2.first + "' in '" + it.name + "' process !");
             }
         }
     }
@@ -188,6 +188,7 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 
 void Parser::runSimlation(int lifeTime) {
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
+    (void)killTime;
 
     createGoodsLeaderboard();
 
@@ -202,7 +203,7 @@ void Parser::runSimlation(int lifeTime) {
     }
     bestDNA->description();
 
-    while (clock() < killTime) {
+    // while (clock() < killTime) {
         // 2) Rank solutions
 
 
@@ -216,7 +217,7 @@ void Parser::runSimlation(int lifeTime) {
 
         // 4) Rank new childs
         // 4.1) Keep best childs and add to 2.1
-    }
+    // }
 
     // Print best path
 }
@@ -245,16 +246,16 @@ void Parser::compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::v
 void Parser::createFirstGen() {
 
     startStock = std::map<std::string, int>();
-
     for (auto it = vStock.begin(); it != vStock.end(); it++) {
         // if (it->quantity > 0) {
             startStock[it->name] = it->quantity;
         // }
     }
-
-    for (size_t i = 0; i < GEN_SIZE; i++) {
-        actualGen.push_back(DNA());
-    }
+    
+    actualGen = std::vector<DNA> (GEN_SIZE);
+    // for (size_t i = 0; i < GEN_SIZE; i++) {
+    //     actualGen.push_back(DNA());
+    // }
 }
 
 // template <typename Map>

@@ -67,6 +67,8 @@ public:
 	std::vector<std::string> &getErrors() { return errors; };
 	std::map<std::string, int> getStartStock() { return startStock; };
 	std::map<std::string, size_t> &getWantedGoods() { return wantedGoods; };
+    size_t &getRandom() { myRandom = myRandom * 3 + 1; return myRandom; }
+    // size_t getRandom() { return (size_t)(rand()); }
 
     void runSimlation(int lifeTime);
 	// static bool map_compare(Map const &lhs, Map const &rhs);
@@ -93,4 +95,5 @@ private:
     std::vector<DNA> actualGen;
     std::vector<DNA> childGen;
 
+    size_t myRandom;
 };
