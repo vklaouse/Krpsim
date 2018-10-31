@@ -3,7 +3,7 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define GEN_SIZE 3
+#define GEN_SIZE 1
 #define GEN_LENGTH 4
 
 struct Process;
