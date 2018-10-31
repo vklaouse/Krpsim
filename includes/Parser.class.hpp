@@ -3,8 +3,8 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define GEN_SIZE 1
-#define GEN_LENGTH 4
+#define GEN_SIZE 2
+#define GEN_LENGTH 100
 
 struct Process;
 
@@ -70,6 +70,7 @@ public:
 	std::map<std::string, int> &getWantedGoods() { return wantedGoods; };
 
     void runSimlation(int lifeTime);
+	// static bool map_compare(Map const &lhs, Map const &rhs);
 
 private:
     void addToStock(std::string name, int quantity);
@@ -80,6 +81,8 @@ private:
     void createFirstGen();
     void createGoodsLeaderboard();
     void createGoodsLeaderboard2();
+	void crossOver(int maleDNA, int femaleDNA);
+	void compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver);
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;

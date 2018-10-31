@@ -202,6 +202,9 @@ void Parser::runSimlation(int lifeTime) {
         // 2.1) Keep best
 
         // 3) Cross Over
+		// for (const auto &dna : actualGen) {
+			// crossOver(0, 1);
+		// }
         // 3bis) Mutation
 
         // 4) Rank new childs
@@ -210,6 +213,27 @@ void Parser::runSimlation(int lifeTime) {
 
     // Print best path
     std::cout << i << std::endl;
+}
+
+void Parser::crossOver(int maleDNA, int femaleDNA) {
+	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
+	compareDNAForCrossOver(actualGen[maleDNA], actualGen[femaleDNA], &possibleCrossOver);
+}
+
+void Parser::compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver) {
+	int iMale = 0;
+	int iFemale = 0;
+	for (size_t i = 0; i < male.getGene().size(); i++) {
+		std::vector<int> fCrossover = std::vector<int>();
+		for (size_t j = 0; j < female.getGene().size(); j++) {
+			if (DNA::compareGenes(male.getGene()[iFemale], female.getGene()[iFemale]))
+				fCrossover.push_back(iFemale);
+			iFemale++;
+		}
+		if (fCrossover.size() > 0)
+			possibleCrossOver->at(iMale) = fCrossover;
+		iMale++;
+	}
 }
 
 void Parser::createFirstGen() {
@@ -225,7 +249,6 @@ void Parser::createFirstGen() {
     // std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
     // std::map<std::string, int> tmpStock = std::map<std::string, int>();
     for (size_t i = 0; i < GEN_SIZE; i++) {
-        DNA newDNA = DNA();
         // newDNA.createGenesSequence();
 
         // for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
@@ -245,9 +268,14 @@ void Parser::createFirstGen() {
         // for (size_t j = 0; j < GEN_LENGTH; j++) {
 
         // }
-        // actualGen.push_back(firstPeople);
+        actualGen.push_back(DNA());
     }
 }
+
+// template <typename Map>
+// bool Parser::map_compare(Map const &lhs, Map const &rhs) {
+//     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+// }
 
 void Parser::createGoodsLeaderboard() {
     wantedGoods = std::map<std::string, int>();

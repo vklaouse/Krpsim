@@ -3,21 +3,21 @@
 
 bool Gene::loopDirection = true;
 
-Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock)
-    : actualCycle(actualCycle), timeElapsed(timeElapsed), vProcess(vProcess), currentStock(currentStock) {
+Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock, bool endDNA)
+    : actualCycle(actualCycle), timeElapsed(timeElapsed), vProcess(vProcess), currentStock(currentStock), endDNA(endDNA), mutating(true) {
 
     std::vector<Process> doableProcess = std::vector<Process>();
 	std::vector<Process> &vParserProcess = Parser::instance->getProcess();
 
 	if (actualCycle != 0) {
-		std::cout << actualCycle << std::endl;
-		// refreshProcessDelay();
+		refreshProcessDelay();
 	}
-
+	if (endDNA)
+		return ;
 	for (size_t i = 0; i < vParserProcess.size(); i++) {
 		bool doable = true;
-        for (auto needStock = vParserProcess[i].neededStock.begin(); needStock != vParserProcess[i].neededStock.end(); needStock++) {
-            if (currentStock[needStock->first] < needStock->second) {
+		for (const auto &needStock : vParserProcess[i].neededStock) {
+			if (this->currentStock[needStock.first] < needStock.second) {
                 doable = false;
                 break ;
             }
@@ -25,7 +25,6 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
         if (doable)
             doableProcess.push_back(vParserProcess[i]);
     }
-	std::cout << doableProcess.size() << std::endl;
 	if (doableProcess.size() > 0)
     	doableProcessGene((rand() % doableProcess.size()), doableProcess);
 }
@@ -37,11 +36,9 @@ void Gene::refreshProcessDelay() {
 			if (process.second[i] == 0) {
 				addNewStock(process.first);
 				process.second.erase(process.second.begin() + i);
+				i--;
 			}
 		}
-		if (process.second.size() == 0)
-			std::cout << process.first << "  is empty" << std::endl;
-			// process.erase(process.first.begin() + i);
 	}
 }
 
@@ -126,15 +123,36 @@ int Gene::doableProcessNbr(std::string name, std::map<std::string, int> tmpCurre
 	return nbr;
 }
 
+void Gene::description() const{
+	std::cout << "ActualCycle : " << actualCycle << std::endl;
+	std::cout << "Time between size gene and the previous : " << timeElapsed << std::endl;
+	std::cout << "Current active process : " << std::endl;
+	for (const auto &process : vProcess) {
+		if (process.second.size() > 0) {
+			std::cout << "	Process name : " << process.first << " -> " << process.second.size() << std::endl;
+			std::cout << "	Delay : [";
+			for (const auto &delay : process.second) {
+				std::cout << " " << delay << " ";
+			}
+			std::cout << "]\n" << std::endl;
+		}
+	}
+	std::cout << "Current stock :" << std::endl;
+	for (const auto &stock : currentStock) {
+		std::cout << "	" <<  stock.first << " : " << stock.second << std::endl;
+	}
+}
+
 DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
-	vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock()));
+	vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), false));
 	int timeElapsed = 0;
 	for (int i = 0; 1;) {
 		timeElapsed = firstEndedProcess(vGene.back().vProcess);
 		i += timeElapsed;
-		if (i == std::numeric_limits<int>::max())
+		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == GEN_LENGTH) {
 			break ;
-		vGene.push_back(Gene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock));
+		}
+		vGene.push_back(Gene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, false));
 	}
 	evalFitness();
 }
@@ -147,6 +165,27 @@ int DNA::firstEndedProcess(std::map<std::string, std::vector<int> > vProcess) {
 		}
 	}
 	return min;
+}
+
+void DNA::description() {
+	std::cout << "*********************************************" << std::endl;
+	for (const auto &gene : vGene) {
+		gene.description();
+		std::cout << "_____________________________________________" << std::endl;
+	}
+	std::cout << "DNA size      : " << vGene.size() << std::endl;
+	std::cout << "Fitness value : " << fitness << std::endl;
+}
+
+bool DNA::compareGenes(Gene first, Gene second) {
+	(void)first;
+	(void)second;
+	// for (const auto &f : first) {
+	// 	for (const auto &s : second) {
+	// 		Parser::map_compare(f.vProcess, s.vProcess);
+	// 	}
+	// }
+	return true;
 }
 
 // void DNA::createGenesSequence(std::vector<Gene> startingGenes, std::map<std::string, int> startStock) {
