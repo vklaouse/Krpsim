@@ -16,6 +16,7 @@
         "iostream": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "ostream": "cpp"
     }
 }

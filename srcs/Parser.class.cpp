@@ -225,7 +225,7 @@ void Parser::createFirstGen() {
     // std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
     // std::map<std::string, int> tmpStock = std::map<std::string, int>();
     for (size_t i = 0; i < GEN_SIZE; i++) {
-        DNA newDNA = DNA();
+        // DNA newDNA = DNA();
         // newDNA.createGenesSequence();
 
         // for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
@@ -250,7 +250,7 @@ void Parser::createFirstGen() {
 }
 
 void Parser::createGoodsLeaderboard() {
-    wantedGoods = std::map<std::string, int>();
+    wantedGoods = std::map<std::string, size_t>();
 	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
 		wantedGoods[goal->name] = 100;
 	}
@@ -292,7 +292,9 @@ void Parser::createGoodsLeaderboard() {
 }
 
 void Parser::createGoodsLeaderboard2() {
-    goodsTiers = std::vector<std::vector<GoodInfo> >();
+    wantedGoods = std::map<std::string, size_t>();
+    std::map<std::string, size_t> tmpWantedGoods = std::map<std::string, size_t>();
+    std::vector<std::vector<GoodInfo> > goodsTiers = std::vector<std::vector<GoodInfo> >();
     std::vector<GoodInfo> oldTier = std::vector<GoodInfo>();
     // Fill first tier
 	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
@@ -308,6 +310,15 @@ void Parser::createGoodsLeaderboard2() {
                     for (const auto &processName : stockInfo.waysToProduce) {
                         for (const auto &process : vProcess) {
                             if (process.name.compare(processName) == 0) {
+                                // Skip process if its selfMaintained for current stockInfo
+                                auto goodNeedsSelf = process.neededStock.find(good.name);
+                                if (goodNeedsSelf != process.neededStock.end()) {
+                                    int producedQuantity = process.resultStock.at(good.name);
+                                    if (goodNeedsSelf->second >= producedQuantity) {
+                                        break;
+                                    }
+                                }
+                                
                                 for (const auto &neededGood : process.neededStock) {
                                     // Check if good is already in a tier or not
                                     bool found = false;
@@ -349,7 +360,7 @@ void Parser::createGoodsLeaderboard2() {
                                                     }
                                                 }
                                                 if (!isSelfMaintained) {
-                                                    goodsTiers[tierIdx][idx].timesNeededByLowerStock++;
+                                                    (tierIdx == goodsTiers.size() - 1) ? goodsTiers[tierIdx][idx].timesNeededByTierStock++ : goodsTiers[tierIdx][idx].timesNeededByLowerStock++;
                                                 }
                                                 break;
                                             }
@@ -377,15 +388,101 @@ void Parser::createGoodsLeaderboard2() {
         newTier.clear();
     }
 
-    std::cout << "--- Tiers ----------------------------------------" << std::endl;
-    for (size_t tierIdx = 0; tierIdx < goodsTiers.size(); tierIdx++) {
-        std::cout << "  --   T" << tierIdx << "   --" << std::endl;
-        for (size_t idx = 0; idx < goodsTiers[tierIdx].size(); idx++) {
-            std::cout << goodsTiers[tierIdx][idx].name << std::endl;
-            std::cout << "  timesNeededByHigherStock: " << goodsTiers[tierIdx][idx].timesNeededByHigherStock << std::endl;
-            std::cout << "  timesNeededByTierStock: " << goodsTiers[tierIdx][idx].timesNeededByTierStock << std::endl;
-            std::cout << "  timesNeededByLowerStock: " << goodsTiers[tierIdx][idx].timesNeededByLowerStock << std::endl;
-            std::cout << "  avgDelay: " << goodsTiers[tierIdx][idx].avgDelay << " score: " << goodsTiers[tierIdx][idx].score << std::endl;
+    // Give every good a score based on how much is used by other goods
+    size_t score = 0;
+    size_t tierScore = 0;
+    size_t idx = 0;
+    // std::cout << "--- Tiers ----------------------------------------" << std::endl;
+    for (const auto &tier : goodsTiers) {
+        // Little bonus for higher tier
+        // std::cout << "  --   T" << idx << "   --" << std::endl;
+        tierScore = goodsTiers.size() - idx;
+        for (const auto &good : tier) {
+            score = tierScore;
+            score += good.timesNeededByHigherStock;
+            score += sqrt(good.timesNeededByTierStock);
+            score += sqrt(sqrt(good.timesNeededByLowerStock));
+
+            // Save scores in easier to handle way
+            tmpWantedGoods[good.name] = score;
+
+            // Debug
+            // std::cout << good.name << std::endl;
+            // std::cout << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
+            // std::cout << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
+            // std::cout << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
+            // std::cout << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
         }
+        idx++;
     }
+
+
+    std::map<std::string, size_t> childsScore = std::map<std::string, size_t>();
+    std::map<std::string, size_t> newWantedGoods = std::map<std::string, size_t>();
+    idx = goodsTiers.size() - 1;
+    while (idx < goodsTiers.size()) {
+        newWantedGoods.clear();
+        for (const auto &good : goodsTiers[idx]) {
+            // Retrieve value that we got before
+            newWantedGoods[good.name] = tmpWantedGoods[good.name];
+
+            // Search for goods that are used to make current one
+            if (idx < goodsTiers.size() - 1) {
+                childsScore.clear();
+                for (const auto &stockInfo : vStock) {
+                    if (stockInfo.name.compare(good.name) == 0) {
+                        for (const auto &processName : stockInfo.waysToProduce) {
+                            for (const auto &process : vProcess) {
+                                if (process.name.compare(processName) == 0) {
+                                    // Skip process if its selfMaintained for current stockInfo
+                                    auto goodNeedsSelf = process.neededStock.find(good.name);
+                                    if (goodNeedsSelf != process.neededStock.end()) {
+                                        int producedQuantity = process.resultStock.at(good.name);
+                                        if (goodNeedsSelf->second >= producedQuantity) {
+                                            break;
+                                        }
+                                    }
+                                    
+                                    for (const auto &neededGood : process.neededStock) {
+                                        // Skip good if it has not been saved since it must be of an upper tier
+                                        if (wantedGoods.find(neededGood.first) == wantedGoods.end())
+                                            continue;
+
+                                        auto it = childsScore.find(neededGood.first);
+                                        if (it == childsScore.end()) {
+                                            childsScore[neededGood.first] = neededGood.second;
+                                        }
+                                        else if (it->second > childsScore[neededGood.first]) {
+                                            childsScore[neededGood.first] = it->second;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Increase good score by mult with all of its childs
+            // std::cout << "How to get " << good.name << " --> ";
+            for (const auto &childScore : childsScore) {
+                // std::cout << " |" << childScore.first << " * " << childScore.second << "| ";
+                newWantedGoods[good.name] += childScore.second * wantedGoods[childScore.first];
+            }
+            // std::cout << std::endl;
+        }
+        // Add newWantedGoods to final map
+        for (auto const &newInfo : newWantedGoods) {
+            wantedGoods[newInfo.first] = newInfo.second;
+        }
+        if (idx == 0)
+            break;
+        idx--;
+    }
+
+    // std::cout << std::endl << "--- Goods Ratings" << std::endl;
+	// for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
+	// 	std::cout << test->first << ": " << test->second << std::endl;
+	// }
 }

@@ -44,14 +44,13 @@ struct GoodInfo {
 public:
     GoodInfo(std::string name)
         : name(name), timesNeededByHigherStock(1), timesNeededByLowerStock(0),
-        timesNeededByTierStock(0), avgDelay(0), score(0) {};
+        timesNeededByTierStock(0), avgDelay(0) {};
     ~GoodInfo() {};
     std::string name;
     int timesNeededByHigherStock;
     int timesNeededByLowerStock;
     int timesNeededByTierStock;
     int avgDelay;
-    int score;
 };
 
 class Parser {
@@ -67,7 +66,7 @@ public:
     std::vector<Goal> getGoal() { return vGoal; };
 	std::vector<std::string> &getErrors() { return errors; };
 	std::map<std::string, int> getStartStock() { return startStock; };
-	std::map<std::string, int> &getWantedGoods() { return wantedGoods; };
+	std::map<std::string, size_t> &getWantedGoods() { return wantedGoods; };
 
     void runSimlation(int lifeTime);
 
@@ -87,8 +86,7 @@ private:
 	std::vector<std::string> errors;
 
     std::map<std::string, int> startStock;
-	std::map<std::string, int> wantedGoods;
-    std::vector<std::vector<GoodInfo> > goodsTiers;
+	std::map<std::string, size_t> wantedGoods;
     std::vector<DNA> actualGen;
     std::vector<DNA> childGen;
 
