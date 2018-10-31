@@ -188,20 +188,30 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 
 void Parser::runSimlation(int lifeTime) {
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
-    size_t i = 0;
 
-    // createGoodsLeaderboard();
-    createGoodsLeaderboard2();
+    createGoodsLeaderboard();
 
     // Find best path using genetic algo
     // 1) Create Initial population
     createFirstGen();
+    DNA *bestDNA = &(actualGen[0]);
+    for (auto &dna : actualGen) {
+        if (dna.evalFitness() > bestDNA->getFitness()) {
+            bestDNA = &dna;
+        }
+    }
+    bestDNA->description();
+
     while (clock() < killTime) {
         // 2) Rank solutions
+
 
         // 2.1) Keep best
 
         // 3) Cross Over
+		// for (const auto &dna : actualGen) {
+			// crossOver(0, 1);
+		// }
         // 3bis) Mutation
 
         // 4) Rank new childs
@@ -209,7 +219,27 @@ void Parser::runSimlation(int lifeTime) {
     }
 
     // Print best path
-    std::cout << i << std::endl;
+}
+
+void Parser::crossOver(int maleDNA, int femaleDNA) {
+	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
+	compareDNAForCrossOver(actualGen[maleDNA], actualGen[femaleDNA], &possibleCrossOver);
+}
+
+void Parser::compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver) {
+	int iMale = 0;
+	int iFemale = 0;
+	for (size_t i = 0; i < male.getGene().size(); i++) {
+		std::vector<int> fCrossover = std::vector<int>();
+		for (size_t j = 0; j < female.getGene().size(); j++) {
+			if (DNA::compareGenes(male.getGene()[iFemale], female.getGene()[iFemale]))
+				fCrossover.push_back(iFemale);
+			iFemale++;
+		}
+		if (fCrossover.size() > 0)
+			possibleCrossOver->at(iMale) = fCrossover;
+		iMale++;
+	}
 }
 
 void Parser::createFirstGen() {
@@ -222,76 +252,17 @@ void Parser::createFirstGen() {
         // }
     }
 
-    // std::map<std::string, ProcessInfo> tmpProcess = std::map<std::string, ProcessInfo>();
-    // std::map<std::string, int> tmpStock = std::map<std::string, int>();
     for (size_t i = 0; i < GEN_SIZE; i++) {
-        // DNA newDNA = DNA();
-        // newDNA.createGenesSequence();
-
-        // for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
-        //     int maxDoable = std::numeric_limits<int>::max();
-        //     for (auto needStock = process->neededStock.begin(); needStock != process->neededStock.end(); needStock++) {
-        //         if (startStock[needStock->first] < needStock->second) {
-        //             maxDoable = 0;
-        //             break ;
-        //         }
-        //         // TODO: update maxDoable
-        //     }
-        //     if (maxDoable > 0) // TODO: take random number between 1 and maxDoable
-        //         tmpProcess[process->name] = ProcessInfo(maxDoable, process->delay);
-        // }
-
-        // CycleSnapshot firstPeople = CycleSnapshot(0, tmpProcess, startStock);
-        // for (size_t j = 0; j < GEN_LENGTH; j++) {
-
-        // }
-        // actualGen.push_back(firstPeople);
+        actualGen.push_back(DNA());
     }
 }
 
+// template <typename Map>
+// bool Parser::map_compare(Map const &lhs, Map const &rhs) {
+//     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+// }
+
 void Parser::createGoodsLeaderboard() {
-    wantedGoods = std::map<std::string, size_t>();
-	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
-		wantedGoods[goal->name] = 100;
-	}
-	// TODO: Give points to intermediary products
-	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
-		for (auto stockInfo = vStock.begin(); stockInfo != vStock.end(); stockInfo++) {
-			if (stockInfo->name.compare(goal->name) == 0) {
-				for (auto processName = stockInfo->waysToProduce.begin(); processName != stockInfo->waysToProduce.end(); processName++) {
-                    for (auto process = vProcess.begin(); process != vProcess.end(); process++) {
-                        if (process->name.compare(*processName) == 0) {
-                            // std::cout << "Check2A " << process->name << " size: " << process->neededStock.size() << std::endl;
-                            for (const auto &neededGood : process->neededStock) {
-                                // std::cout << "- " << neededGood.first << std::endl;
-                                if (wantedGoods.find(neededGood.first) == wantedGoods.end()) {
-                                    wantedGoods[neededGood.first] = 2;
-                                }
-                                else if (wantedGoods[neededGood.first] < 9)
-                                    wantedGoods[neededGood.first] += 1;
-                            }
-
-                            break;
-                        }
-                    }
-				}
-			}
-		}
-	}
-	// TODO: Malus for not useful stuff
-	for (auto stockInfo = vStock.begin(); stockInfo != vStock.end(); stockInfo++) {
-		if (wantedGoods.find(stockInfo->name) == wantedGoods.end()) {
-			wantedGoods[stockInfo->name] = 0;
-			// wantedGoods[stockInfo->name] = -5;
-		}
-	}
-    std::cout << std::endl << "--- Goods Ratings" << std::endl;
-	for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
-		std::cout << test->first << ": " << test->second << std::endl;
-	}
-}
-
-void Parser::createGoodsLeaderboard2() {
     wantedGoods = std::map<std::string, size_t>();
     std::map<std::string, size_t> tmpWantedGoods = std::map<std::string, size_t>();
     std::vector<std::vector<GoodInfo> > goodsTiers = std::vector<std::vector<GoodInfo> >();
