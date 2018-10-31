@@ -104,7 +104,8 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
     }
 
 	int delay;
-	if (saveStrInInt(tokens[i].info, &delay)) {
+    // Skip process if it doesnt produce anything or if delay value has errors
+	if (resultStock.size() != 0 && saveStrInInt(tokens[i].info, &delay)) {
         Process newProcess = Process(name, neededStock, resultStock, delay);
         vProcess.push_back(newProcess);
 
@@ -189,7 +190,8 @@ void Parser::runSimlation(int lifeTime) {
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
     size_t i = 0;
 
-    createGoodsLeaderboard();
+    // createGoodsLeaderboard();
+    createGoodsLeaderboard2();
 
     // Find best path using genetic algo
     // 1) Create Initial population
@@ -283,8 +285,107 @@ void Parser::createGoodsLeaderboard() {
 			// wantedGoods[stockInfo->name] = -5;
 		}
 	}
-    // std::cout << std::endl << "--- Goods Ratings" << std::endl;
-	// for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
-	// 	std::cout << test->first << " rating: " << test->second << std::endl;
-	// }
+    std::cout << std::endl << "--- Goods Ratings" << std::endl;
+	for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
+		std::cout << test->first << ": " << test->second << std::endl;
+	}
+}
+
+void Parser::createGoodsLeaderboard2() {
+    goodsTiers = std::vector<std::vector<GoodInfo> >();
+    std::vector<GoodInfo> oldTier = std::vector<GoodInfo>();
+    // Fill first tier
+	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
+        oldTier.push_back(GoodInfo(goal->name));
+    }
+    goodsTiers.push_back(oldTier);
+    std::vector<GoodInfo> newTier = std::vector<GoodInfo>();
+    // Recursively create all other tiers
+    while (true) {
+        for (const auto &good : oldTier) {
+            for (const auto &stockInfo : vStock) {
+                if (stockInfo.name.compare(good.name) == 0) {
+                    for (const auto &processName : stockInfo.waysToProduce) {
+                        for (const auto &process : vProcess) {
+                            if (process.name.compare(processName) == 0) {
+                                for (const auto &neededGood : process.neededStock) {
+                                    // Check if good is already in a tier or not
+                                    bool found = false;
+                                    // Look in current tier
+                                    size_t idx = 0;
+                                    for (const auto &newGood : newTier) {
+                                        if (newGood.name.compare(neededGood.first) == 0) {
+                                            found = true;
+                                            // If process both requires and produces a good (eg. do_cook:(pan:1):(pan:1):1), then do not increase counter
+                                            bool isSelfMaintained = false;
+                                            for (const auto &producedGood : process.resultStock) {
+                                                if (producedGood.first.compare(neededGood.first) == 0 && producedGood.second <= neededGood.second) {
+                                                    isSelfMaintained = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!isSelfMaintained) {
+                                                newTier[idx].timesNeededByHigherStock++;
+                                            }
+                                            break;
+                                        }
+                                        idx++;
+                                    }
+                                    if (found)
+                                        continue;
+                                    // Look in past tiers
+                                    size_t tierIdx = 0;
+                                    for (const auto &tier : goodsTiers) {
+                                        idx = 0;
+                                        for (const auto &savedGood : tier) {
+                                            if (savedGood.name.compare(neededGood.first) == 0) {
+                                                found = true;
+                                                // If process both requires and produces a good (eg. do_cook:(pan:1):(pan:1):1), then do not increase counter
+                                                bool isSelfMaintained = false;
+                                                for (const auto &producedGood : process.resultStock) {
+                                                    if (producedGood.first.compare(neededGood.first) == 0 && producedGood.second <= neededGood.second) {
+                                                        isSelfMaintained = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (!isSelfMaintained) {
+                                                    goodsTiers[tierIdx][idx].timesNeededByLowerStock++;
+                                                }
+                                                break;
+                                            }
+                                            idx++;
+                                        }
+                                        if (found)
+                                            break;
+                                        tierIdx++;
+                                    }
+                                    if (!found) {
+                                        newTier.push_back(GoodInfo(neededGood.first));
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (newTier.size() == 0)
+            break;
+        goodsTiers.push_back(newTier);
+        oldTier = newTier;
+        newTier.clear();
+    }
+
+    std::cout << "--- Tiers ----------------------------------------" << std::endl;
+    for (size_t tierIdx = 0; tierIdx < goodsTiers.size(); tierIdx++) {
+        std::cout << "  --   T" << tierIdx << "   --" << std::endl;
+        for (size_t idx = 0; idx < goodsTiers[tierIdx].size(); idx++) {
+            std::cout << goodsTiers[tierIdx][idx].name << std::endl;
+            std::cout << "  timesNeededByHigherStock: " << goodsTiers[tierIdx][idx].timesNeededByHigherStock << std::endl;
+            std::cout << "  timesNeededByTierStock: " << goodsTiers[tierIdx][idx].timesNeededByTierStock << std::endl;
+            std::cout << "  timesNeededByLowerStock: " << goodsTiers[tierIdx][idx].timesNeededByLowerStock << std::endl;
+            std::cout << "  avgDelay: " << goodsTiers[tierIdx][idx].avgDelay << " score: " << goodsTiers[tierIdx][idx].score << std::endl;
+        }
+    }
 }

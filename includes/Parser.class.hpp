@@ -40,6 +40,20 @@ public:
 	bool optimizeTime;
 };
 
+struct GoodInfo {
+public:
+    GoodInfo(std::string name)
+        : name(name), timesNeededByHigherStock(1), timesNeededByLowerStock(0),
+        timesNeededByTierStock(0), avgDelay(0), score(0) {};
+    ~GoodInfo() {};
+    std::string name;
+    int timesNeededByHigherStock;
+    int timesNeededByLowerStock;
+    int timesNeededByTierStock;
+    int avgDelay;
+    int score;
+};
+
 class Parser {
 
 public:
@@ -65,6 +79,7 @@ private:
 	bool saveStrInInt(std::string &str, int *myInt);
     void createFirstGen();
     void createGoodsLeaderboard();
+    void createGoodsLeaderboard2();
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;
@@ -73,6 +88,7 @@ private:
 
     std::map<std::string, int> startStock;
 	std::map<std::string, int> wantedGoods;
+    std::vector<std::vector<GoodInfo> > goodsTiers;
     std::vector<DNA> actualGen;
     std::vector<DNA> childGen;
 
