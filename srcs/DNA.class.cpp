@@ -26,7 +26,8 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
             doableProcess.push_back(vParserProcess[i]);
     }
 	std::cout << doableProcess.size() << std::endl;
-    doableProcessGene((rand() % doableProcess.size()), doableProcess);
+	if (doableProcess.size() > 0)
+    	doableProcessGene((rand() % doableProcess.size()), doableProcess);
 }
 
 void Gene::refreshProcessDelay() {
