@@ -220,7 +220,8 @@ void Parser::runSimlation(int lifeTime) {
 
         // 3) Cross Over
 		// for (const auto &dna : actualGen) {
-			// crossOver(0, 1);
+			crossOver(0, 1);
+
 		// }
         // 3bis) Mutation
 
@@ -234,21 +235,32 @@ void Parser::runSimlation(int lifeTime) {
 void Parser::crossOver(int maleDNA, int femaleDNA) {
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
 	compareDNAForCrossOver(actualGen[maleDNA], actualGen[femaleDNA], &possibleCrossOver);
+	std::cout << possibleCrossOver.size() << std::endl;
+	for (const auto &pco : possibleCrossOver) {
+		std::cout << pco.first << " -> [";
+		if (pco.second.size()) {
+			for (const auto &p : pco.second) {
+				std::cout << " " << p << " ";
+			}
+		}
+		std::cout << "]" << std::endl;
+	}
 }
 
 void Parser::compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver) {
-	int iMale = 0;
-	int iFemale = 0;
+	// int iMale = 0;
+	// int iFemale = 0;
 	for (size_t i = 0; i < male.getGene().size(); i++) {
 		std::vector<int> fCrossover = std::vector<int>();
 		for (size_t j = 0; j < female.getGene().size(); j++) {
-			if (DNA::compareGenes(male.getGene()[iFemale], female.getGene()[iFemale]))
-				fCrossover.push_back(iFemale);
-			iFemale++;
+			if (DNA::compareGenes(male.getGene()[i], female.getGene()[j]))
+				fCrossover.push_back(j);
+			// iFemale++;
 		}
 		if (fCrossover.size() > 0)
-			possibleCrossOver->at(iMale) = fCrossover;
-		iMale++;
+			// (void)possibleCrossOver;
+			possibleCrossOver->insert(std::pair<int, std::vector<int>>(i, fCrossover));
+		// iMale++;
 	}
 }
 
@@ -260,7 +272,7 @@ void Parser::createFirstGen() {
             startStock[it->name] = it->quantity;
         // }
     }
-    
+
     actualGen = std::vector<DNA> (GEN_SIZE);
     // for (size_t i = 0; i < GEN_SIZE; i++) {
     //     actualGen.push_back(DNA());
@@ -299,7 +311,7 @@ void Parser::createGoodsLeaderboard() {
                                         break;
                                     }
                                 }
-                                
+
                                 for (const auto &neededGood : process.neededStock) {
                                     // Check if good is already in a tier or not
                                     bool found = false;
@@ -423,7 +435,7 @@ void Parser::createGoodsLeaderboard() {
                                             break;
                                         }
                                     }
-                                    
+
                                     for (const auto &neededGood : process.neededStock) {
                                         // Skip good if it has not been saved since it must be of an upper tier
                                         if (wantedGoods.find(neededGood.first) == wantedGoods.end())
@@ -499,7 +511,7 @@ bool Parser::sortProcessFunction(Process const& lhs, Process const& rhs) {
     }
     else
         return lScore > rScore;
-    
+
     // return Parser::instance->getProcessScore(lhs) > Parser::instance->getProcessScore(rhs);
 }
 

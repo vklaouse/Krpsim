@@ -143,13 +143,34 @@ void DNA::description() {
 }
 
 bool DNA::compareGenes(Gene first, Gene second) {
-	(void)first;
-	(void)second;
-	// for (const auto &f : first) {
-	// 	for (const auto &s : second) {
-	// 		Parser::map_compare(f.vProcess, s.vProcess);
-	// 	}
-	// }
+	if (first.vProcess.size() > second.vProcess.size() || first.currentStock.size() > second.currentStock.size())
+		return false;
+	// if (!DNA::compareCurrentStock(first.currentStock, second.currentStock))
+	// 	return false;
+	// if (!DNA::compareCurrentProcess(first.vProcess, second.vProcess))
+	// 	return false;
+	return true;
+}
+
+bool DNA::compareCurrentProcess(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second) {
+	for (const auto &f : first) {
+		if (f.second.size() > second[f.first].size())
+			return false;
+		else {
+			for (size_t i = 0; i < f.second.size(); i++) {
+				if (f.second[i] != second[f.first][i])
+					return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool DNA::compareCurrentStock(std::map<std::string, int> first, std::map<std::string, int> second) {
+	for (const auto &f : first) {
+		if (f.second > second[f.first])
+			return false;
+	}
 	return true;
 }
 

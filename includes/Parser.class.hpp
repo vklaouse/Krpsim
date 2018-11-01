@@ -3,7 +3,7 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define GEN_SIZE 20
+#define GEN_SIZE 2
 #define DNA_SIZE 100
 
 struct Process;
@@ -71,7 +71,6 @@ public:
     // size_t getRandom() { return (size_t)(rand()); }
 
     void runSimlation(int lifeTime);
-	// static bool map_compare(Map const &lhs, Map const &rhs);
 
 private:
     void addToStock(std::string name, int quantity);
