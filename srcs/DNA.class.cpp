@@ -14,29 +14,36 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
 	size_t tmpDoable;
 	size_t random;
 	bool firstCheck;
-	for (const auto &process : vParserProcess) {
-		firstCheck = true;
-		for (const auto &needStock : process.neededStock) {
-			tmpDoable = this->currentStock[needStock.first] / needStock.second;
-			if (firstCheck || tmpDoable < maxDoable) {
-				firstCheck = false;
-				maxDoable = tmpDoable;
-				if (maxDoable == 0)
-					break;
+	bool canAddProcess = false;
+	bool hasAddedProcess = false;
+	do {
+		for (const auto &process : vParserProcess) {
+			firstCheck = true;
+			for (const auto &needStock : process.neededStock) {
+				tmpDoable = this->currentStock[needStock.first] / needStock.second;
+				if (firstCheck || tmpDoable < maxDoable) {
+					firstCheck = false;
+					maxDoable = tmpDoable;
+					if (maxDoable == 0)
+						break;
+				}
 			}
-        }
-        if (maxDoable > 0) {
-			random = Parser::instance->getRandom() % (maxDoable + 1);
-			if (random > 0) {
-				std::vector<int> vDelay (random, process.delay);
-				applyProcessToStock(process.name, &(this->currentStock), random);
-				if (actualCycle != 0)
-					this->vProcess[process.name].insert(this->vProcess[process.name].end(), vDelay.begin(), vDelay.end());
-				else
-					this->vProcess[process.name] = vDelay;
+			if (maxDoable > 0) {
+				canAddProcess = true;
+				random = Parser::instance->getRandom() % (maxDoable + 1);
+
+				if (random > 0) {
+					hasAddedProcess = true;
+					std::vector<int> vDelay (random, process.delay);
+					applyProcessToStock(process.name, &(this->currentStock), random);
+					if (actualCycle != 0)
+						this->vProcess[process.name].insert(this->vProcess[process.name].end(), vDelay.begin(), vDelay.end());
+					else
+						this->vProcess[process.name] = vDelay;
+				}
 			}
 		}
-    }
+	} while (canAddProcess && !hasAddedProcess);
 }
 
 void Gene::refreshProcessDelay() {
