@@ -82,8 +82,8 @@ private:
     void createGoodsLeaderboard();
     static bool sortProcessFunction(Process const& lhs, Process const& rhs);
     size_t getProcessScore(Process const& process);
-	void crossOver(size_t maleDNA, size_t femaleDNA);
-	void compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver);
+	void crossOver(int firstDNA, int secondDNA);
+	void compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver);
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;

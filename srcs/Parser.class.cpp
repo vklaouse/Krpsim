@@ -210,7 +210,7 @@ void Parser::runSimlation(int lifeTime) {
             bestDNA = &dna;
         }
     }
-    bestDNA->description();
+    // bestDNA->description();
 	size_t totalFit;
 	size_t idxParentA;
 	size_t idxParentB;
@@ -255,6 +255,7 @@ void Parser::runSimlation(int lifeTime) {
 					break ;
 			}
 			crossOver(idxParentA, idxParentB);
+            break;
 		}
         // 3bis) Mutation
 
@@ -263,42 +264,26 @@ void Parser::runSimlation(int lifeTime) {
     // Print best path
 }
 
-void Parser::crossOver(size_t firstDNA, size_t secondDNA) {
+void Parser::crossOver(int firstDNA, int secondDNA) {
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
 	compareDNAForCrossOver(actualGen[firstDNA], actualGen[secondDNA], &possibleCrossOver);
-	size_t geneA = rand() % possibleCrossOver.size();
-	size_t geneB = rand() % possibleCrossOver[geneA].size();
-	std::vector<Gene> tmpDNA = std::vector<Gene>();
-	std::cout << geneA << std::endl;
 
-	for (size_t i = 0; i < geneA; i++) {
-		tmpDNA.push_back(actualGen[firstDNA].getGeneCpy()[i]);
-	}
-	for (size_t i = geneB; i < actualGen[secondDNA].getGeneCpy().size(); i++) {
-		tmpDNA.push_back(actualGen[secondDNA].getGeneCpy()[i]);
-	}
-
-	// actualGen[firstDNA].getGeneCpy()[geneA].description();
-	// tmpDNA.insert(tmpDNA.end(), actualGen[firstDNA].getGeneCpy().begin(), actualGen[firstDNA].getGeneCpy().begin() + geneA + 1);
-	// tmpDNA.insert(tmpDNA.end(), actualGen[secondDNA].getGeneCpy().begin() + geneB, actualGen[secondDNA].getGeneCpy().end());
-	childGen.push_back(DNA(tmpDNA, geneA));
-	// childGen.back().description();
-	// DNA tmp =
-	// childGen.insert
-	// std::cout << possibleCrossOver.size() << std::endl;
-	// for (const auto &pco : possibleCrossOver) {
-	// 	std::cout << pco.first << " -> [";
-	// 	if (pco.second.size()) {
-	// 		for (const auto &p : pco.second) {
-	// 			std::cout << " " << p << " ";
-	// 		}
-	// 	}
-	// 	std::cout << "]" << std::endl;
-	// }
+    int random = rand() % possibleCrossOver.size();
+	size_t geneA;
+    for (const auto &mapValues : possibleCrossOver) {
+        if (random == 0) {
+            geneA = mapValues.first;
+            break;
+        }
+        random--;
+    }
+    random = rand() % possibleCrossOver[geneA].size();
+	size_t geneB = possibleCrossOver[geneA][random];
+	childGen.push_back(DNA(actualGen[firstDNA], actualGen[secondDNA], geneA, geneB));
+    // childGen.back().description();
 }
 
 void Parser::compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver) {
-
 	for (size_t i = 0; i < first.getGene().size(); i++) {
 		std::vector<int> fCrossover = std::vector<int>();
 		for (size_t j = 0; j < second.getGene().size(); j++) {

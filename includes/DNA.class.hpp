@@ -6,14 +6,15 @@ struct Process;
 
 struct Gene {
 public:
-	Gene() {};
-    Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock);
+    Gene() {};
+    Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock, bool addProcess);
     ~Gene() {};
 
 	bool applyProcessToStock(std::string name, std::map<std::string, int> * stock, int nbrOfApply);
 	void refreshProcessDelay();
 	void addNewStock(std::string processName);
-	void description() const;
+	void description(bool hash = false) const;
+    void updateHash();
 
     int actualCycle;
 	int timeElapsed;
@@ -28,13 +29,13 @@ public:
 class DNA {
 public:
     DNA();
-	DNA(std::vector<Gene> vGene, size_t join);
+	DNA(DNA &first, DNA &second, int geneA, int geneB);
     ~DNA() {};
 
 	int firstEndedProcess(std::map<std::string, std::vector<int> > vProcess);
     size_t getFitness() { return fitness; };
 	size_t evalFitness();
-	void description();
+	void description(bool hash = false);
 	std::vector<Gene> & getGene() { return vGene; };
 	std::vector<Gene> getGeneCpy() { return vGene; };
 	static bool compareGenes(Gene &first, Gene &second);
