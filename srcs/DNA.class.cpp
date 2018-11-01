@@ -10,6 +10,7 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
 	if (actualCycle != 0) {
 		refreshProcessDelay();
 	}
+	initialStock = this->currentStock;
 	size_t maxDoable;
 	size_t tmpDoable;
 	size_t random;
@@ -31,10 +32,10 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
 			if (maxDoable > 0) {
 				canAddProcess = true;
 				random = Parser::instance->getRandom() % (maxDoable + 1);
-
+				// std::cerr << process.name << " -> " << z++ << ", Doable -> " << maxDoable << ", Random -> " << random << std::endl;
 				if (random > 0) {
 					hasAddedProcess = true;
-					std::vector<int> vDelay (random, process.delay);
+					std::vector<int> vDelay (random, (process.delay * -1));
 					applyProcessToStock(process.name, &(this->currentStock), random);
 					if (actualCycle != 0)
 						this->vProcess[process.name].insert(this->vProcess[process.name].end(), vDelay.begin(), vDelay.end());
@@ -44,14 +45,27 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
 			}
 		}
 	} while (canAddProcess && !hasAddedProcess);
+	for (const auto &CS : this->currentStock) {
+		currentStockHash += CS.first + std::to_string(CS.second);
+	}
+	for (const auto &process : this->vProcess) {
+		if (process.second.size() > 0) {
+			vProcessHash += process.first;
+			vProcessHash += ":";
+			for (const auto &delay : process.second) {
+				vProcessHash += std::to_string(delay) + ";";
+			}
+		}
+	}
 }
 
 void Gene::refreshProcessDelay() {
 	size_t count = 0;
-	// for (autoauto &process : vProcess) {
 	for (auto &process : vProcess) {
 		count = 0;
 		for (size_t i = 0; i < process.second.size(); i++) {
+			if (process.second[i] < 0)
+				process.second[i] *= -1;
 			process.second[i] -= timeElapsed;
 			if (process.second[i] == 0) {
 				count++;
@@ -113,10 +127,12 @@ void Gene::description() const{
 			std::cout << "]\n" << std::endl;
 		}
 	}
+	std::cout << "Process hash : " << vProcessHash << std::endl;
 	std::cout << "Current stock :" << std::endl;
 	for (const auto &stock : currentStock) {
 		std::cout << "	" <<  stock.first << " : " << stock.second << std::endl;
 	}
+	std::cout << "Stock hash : " << currentStockHash << std::endl;
 }
 
 DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
@@ -129,15 +145,27 @@ DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
 			break ;
 		}
 		vGene.push_back(Gene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock));
+		if (std::find(vHash.begin(), vHash.end(), vGene.back().currentStockHash + vGene.back().vProcessHash) != vHash.end()) {
+			break ;
+		}
+		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
 	}
+	// description();
 	evalFitness();
+}
+
+DNA::DNA(std::vector<Gene> vGene, size_t join) : vGene(vGene) {
+	join = 0;
 }
 
 int DNA::firstEndedProcess(std::map<std::string, std::vector<int> > vProcess) {
 	int min = std::numeric_limits<int>::max();
-	for (const auto &process : vProcess) {
-		if (process.second.size() > 0)
+	for (auto &process : vProcess) {
+		if (process.second.size() > 0 ) {
+			if (process.second[0] < 0)
+				process.second[0] *= -1;
 			min = min < process.second[0] ? min : process.second[0];
+		}
 	}
 	return min;
 }
@@ -152,10 +180,8 @@ void DNA::description() {
 	std::cout << "Fitness value : " << fitness << std::endl;
 }
 
-bool DNA::compareGenes(Gene first, Gene second) {
-	if (first.vProcess.size() > second.vProcess.size() || first.currentStock.size() > second.currentStock.size())
-		return false;
-	if (!DNA::compareCurrentStock(first.currentStock, second.currentStock))
+bool DNA::compareGenes(Gene &first, Gene &second) {
+	if (!DNA::compareCurrentStock(first.initialStock, second.initialStock))
 		return false;
 	if (!DNA::compareCurrentProcess(first.vProcess, second.vProcess))
 		return false;
@@ -164,19 +190,15 @@ bool DNA::compareGenes(Gene first, Gene second) {
 
 bool DNA::compareCurrentProcess(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second) {
 	for (const auto &f : first) {
-		if (f.second.size() > second[f.first].size())
-			return false;
-		else {
-			for (size_t i = 0; i < f.second.size(); i++) {
-				if (f.second[i] != second[f.first][i])
-					return false;
-			}
+		for (size_t i = 0; i < f.second.size(); i++) {
+			if (second[f.first].size() > i && f.second[i] != second[f.first][i] && f.second[i] > 0 && second[f.first][i] > 0)
+				return false;
 		}
 	}
 	return true;
 }
 
-bool DNA::compareCurrentStock(std::map<std::string, int> first, std::map<std::string, int> second) {
+bool DNA::compareCurrentStock(std::map<std::string, int> &first, std::map<std::string, int> &second) {
 	for (const auto &f : first) {
 		if (f.second > second[f.first])
 			return false;

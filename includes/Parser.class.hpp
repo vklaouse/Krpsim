@@ -3,7 +3,7 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define GEN_SIZE 2
+#define POPULATION_SIZE 2
 #define DNA_SIZE 100
 
 struct Process;
@@ -67,8 +67,8 @@ public:
 	std::vector<std::string> &getErrors() { return errors; };
 	std::map<std::string, int> getStartStock() { return startStock; };
 	std::map<std::string, size_t> &getWantedGoods() { return wantedGoods; };
-    size_t &getRandom() { myRandom = myRandom * 3 + 1; return myRandom; }
-    // size_t getRandom() { return (size_t)(rand()); }
+    // size_t &getRandom() { myRandom = myRandom * 3 + 1; return (size_t)(rand()); }
+    size_t getRandom() { return (size_t)(rand()); }
 
     void runSimlation(int lifeTime);
 
@@ -82,7 +82,7 @@ private:
     void createGoodsLeaderboard();
     static bool sortProcessFunction(Process const& lhs, Process const& rhs);
     size_t getProcessScore(Process const& process);
-	void crossOver(int maleDNA, int femaleDNA);
+	void crossOver(size_t maleDNA, size_t femaleDNA);
 	void compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver);
 
     std::vector<Stock> vStock;

@@ -211,78 +211,112 @@ void Parser::runSimlation(int lifeTime) {
         }
     }
     bestDNA->description();
-
+	size_t totalFit;
+	size_t idxParentA;
+	size_t idxParentB;
     // while (clock() < killTime) {
+		totalFit = 0;
         // 2) Rank solutions
+		for (auto &dna : actualGen) {
+			totalFit += dna.getFitness();
+	    }
 
-
-        // 2.1) Keep best
 
         // 3) Cross Over
-		// for (const auto &dna : actualGen) {
-			crossOver(0, 1);
+		for (size_t i = 0; i < POPULATION_SIZE; i++) {
+			size_t somePartOfTotalFit = rand() % totalFit;
+			size_t somePartOfTotalFit2 = rand() % totalFit;
+			idxParentA = 0;
+			idxParentB = 0;
+			for (size_t i = 0; i < POPULATION_SIZE; i++) {
+				if (somePartOfTotalFit > 0) {
+					if (somePartOfTotalFit < actualGen[i].getFitness()) {
+						// parent A found !
+						idxParentA = i;
+						somePartOfTotalFit = 0;
+					}
+					else {
+						somePartOfTotalFit -= actualGen[i].getFitness();
+					}
+				}
 
-		// }
+				if (somePartOfTotalFit2 > 0) {
+					if (somePartOfTotalFit2 < actualGen[i].getFitness()) {
+						// parent B found !
+						idxParentB = i;
+						somePartOfTotalFit2 = 0;
+					}
+					else {
+						somePartOfTotalFit2 -= actualGen[i].getFitness();
+					}
+				}
+
+				if (somePartOfTotalFit == 0 && somePartOfTotalFit2 == 0)
+					break ;
+			}
+			crossOver(idxParentA, idxParentB);
+		}
         // 3bis) Mutation
 
-        // 4) Rank new childs
-        // 4.1) Keep best childs and add to 2.1
     // }
 
     // Print best path
 }
 
-void Parser::crossOver(int maleDNA, int femaleDNA) {
+void Parser::crossOver(size_t firstDNA, size_t secondDNA) {
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
-	compareDNAForCrossOver(actualGen[maleDNA], actualGen[femaleDNA], &possibleCrossOver);
-	std::cout << possibleCrossOver.size() << std::endl;
-	for (const auto &pco : possibleCrossOver) {
-		std::cout << pco.first << " -> [";
-		if (pco.second.size()) {
-			for (const auto &p : pco.second) {
-				std::cout << " " << p << " ";
-			}
-		}
-		std::cout << "]" << std::endl;
+	compareDNAForCrossOver(actualGen[firstDNA], actualGen[secondDNA], &possibleCrossOver);
+	size_t geneA = rand() % possibleCrossOver.size();
+	size_t geneB = rand() % possibleCrossOver[geneA].size();
+	std::vector<Gene> tmpDNA = std::vector<Gene>();
+	std::cout << geneA << std::endl;
+
+	for (size_t i = 0; i < geneA; i++) {
+		tmpDNA.push_back(actualGen[firstDNA].getGeneCpy()[i]);
 	}
+	for (size_t i = geneB; i < actualGen[secondDNA].getGeneCpy().size(); i++) {
+		tmpDNA.push_back(actualGen[secondDNA].getGeneCpy()[i]);
+	}
+
+	// actualGen[firstDNA].getGeneCpy()[geneA].description();
+	// tmpDNA.insert(tmpDNA.end(), actualGen[firstDNA].getGeneCpy().begin(), actualGen[firstDNA].getGeneCpy().begin() + geneA + 1);
+	// tmpDNA.insert(tmpDNA.end(), actualGen[secondDNA].getGeneCpy().begin() + geneB, actualGen[secondDNA].getGeneCpy().end());
+	childGen.push_back(DNA(tmpDNA, geneA));
+	// childGen.back().description();
+	// DNA tmp =
+	// childGen.insert
+	// std::cout << possibleCrossOver.size() << std::endl;
+	// for (const auto &pco : possibleCrossOver) {
+	// 	std::cout << pco.first << " -> [";
+	// 	if (pco.second.size()) {
+	// 		for (const auto &p : pco.second) {
+	// 			std::cout << " " << p << " ";
+	// 		}
+	// 	}
+	// 	std::cout << "]" << std::endl;
+	// }
 }
 
-void Parser::compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver) {
-	// int iMale = 0;
-	// int iFemale = 0;
-	for (size_t i = 0; i < male.getGene().size(); i++) {
+void Parser::compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver) {
+
+	for (size_t i = 0; i < first.getGene().size(); i++) {
 		std::vector<int> fCrossover = std::vector<int>();
-		for (size_t j = 0; j < female.getGene().size(); j++) {
-			if (DNA::compareGenes(male.getGene()[i], female.getGene()[j]))
+		for (size_t j = 0; j < second.getGene().size(); j++) {
+			if (DNA::compareGenes(first.getGene()[i], second.getGene()[j]))
 				fCrossover.push_back(j);
-			// iFemale++;
 		}
 		if (fCrossover.size() > 0)
-			// (void)possibleCrossOver;
 			possibleCrossOver->insert(std::pair<int, std::vector<int>>(i, fCrossover));
-		// iMale++;
 	}
 }
 
 void Parser::createFirstGen() {
-
     startStock = std::map<std::string, int>();
     for (auto it = vStock.begin(); it != vStock.end(); it++) {
-        // if (it->quantity > 0) {
-            startStock[it->name] = it->quantity;
-        // }
+        startStock[it->name] = it->quantity;
     }
-
-    actualGen = std::vector<DNA> (GEN_SIZE);
-    // for (size_t i = 0; i < GEN_SIZE; i++) {
-    //     actualGen.push_back(DNA());
-    // }
+    actualGen = std::vector<DNA> (POPULATION_SIZE);
 }
-
-// template <typename Map>
-// bool Parser::map_compare(Map const &lhs, Map const &rhs) {
-//     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
-// }
 
 void Parser::createGoodsLeaderboard() {
     wantedGoods = std::map<std::string, size_t>();
