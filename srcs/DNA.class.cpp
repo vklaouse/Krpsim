@@ -1,8 +1,6 @@
 #include "DNA.class.hpp"
 #include "Parser.class.hpp"
 
-bool Gene::loopDirection = true;
-
 Gene::Gene(int actualCycle, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock)
     : actualCycle(actualCycle), vProcess(vProcess), currentStock(currentStock), mutating(true) {
 
@@ -12,19 +10,19 @@ Gene::Gene(int actualCycle, std::map<std::string, std::vector<int> > vProcess, s
 	if (actualCycle != 0) {
 		refreshProcessDelay();
 	}
-	for (size_t i = 0; i < vParserProcess.size(); i++) {
+	for (const auto &process : vParserProcess) {
 		bool doable = true;
-		for (const auto &needStock : vParserProcess[i].neededStock) {
+		for (const auto &needStock : process.neededStock) {
 			if (this->currentStock[needStock.first] < needStock.second) {
                 doable = false;
                 break ;
             }
         }
         if (doable)
-            doableProcess.push_back(vParserProcess[i]);
+            doableProcess.push_back(process);
     }
 	if (doableProcess.size() > 0)
-		doableProcessGene((Parser::instance->getRandom() % doableProcess.size()), doableProcess);
+		doableProcessGene(doableProcess);
 }
 
 void Gene::refreshProcessDelay() {
@@ -53,29 +51,18 @@ void Gene::addNewStock(std::string processName) {
 	}
 }
 
-void Gene::doableProcessGene(int index, std::vector<Process> &doableProcess) {
+void Gene::doableProcessGene(std::vector<Process> &doableProcess) {
 	int doable;
 	int random;
-	bool exitFromFor = false;
-	for (int i = index; 1; Gene::loopDirection ? i-- : i++) {
+	for (size_t i = 0; i < doableProcess.size(); i++) {
 		doable = doableProcessNbr(doableProcess[i].name, currentStock);
 		if (doable > 0) {
-			// std::cout << "New rand: " << *myRandom << std::endl;
 			random = Parser::instance->getRandom() % doable;
-			// random = doable;
 			std::vector<int> vDelay (random, doableProcess[i].delay + actualCycle);
 			applyProcessToStock(doableProcess[i].name, &currentStock, random);
 			vProcess[doableProcess[i].name].insert(vProcess[doableProcess[i].name].end(), vDelay.begin(), vDelay.end());
 		}
-		if (exitFromFor && index == i)
-			break;
-		exitFromFor = true;
-		if (i <= 0 && Gene::loopDirection)
-			i = doableProcess.size();
-		if (i >= (int)doableProcess.size() - 1 && !Gene::loopDirection)
-			i = -1;
 	}
-	Gene::loopDirection = !Gene::loopDirection;
 }
 
 bool Gene::applyProcessToStock(std::string name, std::map<std::string, int> * stock, int nbrOfApply) {
@@ -128,7 +115,7 @@ DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
 
 	for (int i = 0; 1;) {
 		i = firstEndedProcess(vGene.back().vProcess);
-		if (i == std::numeric_limits<int>::max() || vGene.size() == GEN_LENGTH) {
+		if (i == std::numeric_limits<int>::max() || vGene.size() == DNA_SIZE) {
 			break ;
 		}
 		vGene.push_back(Gene(i, vGene.back().vProcess, vGene.back().currentStock));

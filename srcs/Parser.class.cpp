@@ -191,6 +191,15 @@ void Parser::runSimlation(int lifeTime) {
     (void)killTime;
 
     createGoodsLeaderboard();
+    // std::cout << "+++++++++++++++++++++++++" << std::endl;
+    // for (auto const &proc : vProcess) {
+    //     std::cout << proc.name << std::endl;
+    // }
+    std::sort(vProcess.begin(), vProcess.end(), &Parser::sortProcessFunction);
+    // std::cout << "+++++++++++++++++++++++++" << std::endl;
+    // for (auto const &proc : vProcess) {
+    //     std::cout << proc.name << std::endl;
+    // }
 
     // Find best path using genetic algo
     // 1) Create Initial population
@@ -201,7 +210,7 @@ void Parser::runSimlation(int lifeTime) {
             bestDNA = &dna;
         }
     }
-    bestDNA->description();
+    // bestDNA->description();
 
     // while (clock() < killTime) {
         // 2) Rank solutions
@@ -457,4 +466,60 @@ void Parser::createGoodsLeaderboard() {
 	// for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
 	// 	std::cout << test->first << ": " << test->second << std::endl;
 	// }
+}
+
+
+bool Parser::sortProcessFunction(Process const& lhs, Process const& rhs) {
+	std::map<std::string, size_t> &wantedGoods = Parser::instance->getWantedGoods();
+
+    size_t lScore = 0;
+    for (const auto &good : lhs.resultStock) {
+        if (wantedGoods.find(good.first) != wantedGoods.end())
+            lScore += wantedGoods[good.first] * good.second;
+    }
+    size_t rScore = 0;
+    for (const auto &good : rhs.resultStock) {
+        if (wantedGoods.find(good.first) != wantedGoods.end())
+            rScore += wantedGoods[good.first] * good.second;
+    }
+
+    if (rScore == lScore) {
+    // if ((lScore > rScore && rScore + 30 > lScore) ||
+    //     (rScore > lScore && lScore + 30 > rScore)) {
+    // if (abs(static_cast<long long>(lScore - rScore) <= 100)) {
+        for (const auto &good : lhs.neededStock) {
+            if (wantedGoods.find(good.first) != wantedGoods.end())
+                lScore += wantedGoods[good.first] * good.second;
+        }
+        for (const auto &good : rhs.neededStock) {
+            if (wantedGoods.find(good.first) != wantedGoods.end())
+                rScore += wantedGoods[good.first] * good.second;
+        }
+        return lScore > rScore;
+    }
+    else
+        return lScore > rScore;
+    
+    // return Parser::instance->getProcessScore(lhs) > Parser::instance->getProcessScore(rhs);
+}
+
+size_t Parser::getProcessScore(Process const& process) {
+    size_t score = 0;
+    for (const auto &good : process.resultStock) {
+        if (wantedGoods.find(good.first) != wantedGoods.end())
+            score += wantedGoods[good.first] * good.second;
+    }
+
+    size_t subScore = 0;
+    for (const auto &good : process.neededStock) {
+        if (wantedGoods.find(good.first) != wantedGoods.end())
+            subScore += wantedGoods[good.first] * good.second;
+    }
+
+    if (subScore > score)
+        score = 0;
+    else
+        score -= subScore;
+
+    return score;
 }

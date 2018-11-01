@@ -4,7 +4,7 @@
 #include "DNA.class.hpp"
 
 #define GEN_SIZE 20
-#define GEN_LENGTH 100
+#define DNA_SIZE 100
 
 struct Process;
 
@@ -81,7 +81,8 @@ private:
 	bool saveStrInInt(std::string &str, int *myInt);
     void createFirstGen();
     void createGoodsLeaderboard();
-    void createGoodsLeaderboard2();
+    static bool sortProcessFunction(Process const& lhs, Process const& rhs);
+    size_t getProcessScore(Process const& process);
 	void crossOver(int maleDNA, int femaleDNA);
 	void compareDNAForCrossOver(DNA &male, DNA &female, std::map<int, std::vector<int>> *possibleCrossOver);
 

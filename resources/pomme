@@ -12,7 +12,7 @@ buy_beurre:(euro:100):(beurre:2000):200
 buy_lait:(euro:100):(lait:2000):200
 #
 separation_oeuf:(oeuf:1):(jaune_oeuf:1;blanc_oeuf:1):2
-#reunion_oeuf:(jaune_oeuf:1;blanc_oeuf:1):(oeuf:1):1
+reunion_oeuf:(jaune_oeuf:1;blanc_oeuf:1):(oeuf:1):1
 do_pate_sablee:(oeuf:5;farine:100;beurre:4;lait:5):(pate_sablee:300;blanc_oeuf:3):300
 do_pate_feuilletee:(oeuf:3;farine:200;beurre:10;lait:2):(pate_feuilletee:100):800
 do_tarte_citron:(pate_feuilletee:100;citron:50;blanc_oeuf:5;four:1):(tarte_citron:5;four:1):60
