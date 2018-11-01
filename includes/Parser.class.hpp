@@ -3,7 +3,7 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define POPULATION_SIZE 2
+#define POPULATION_SIZE 50
 #define DNA_SIZE 100
 
 struct Process;
@@ -83,6 +83,7 @@ private:
     static bool sortProcessFunction(Process const& lhs, Process const& rhs);
     size_t getProcessScore(Process const& process);
 	void crossOver(int firstDNA, int secondDNA);
+    void mutation();
 	void compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver);
 
     std::vector<Stock> vStock;

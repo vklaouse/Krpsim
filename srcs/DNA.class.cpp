@@ -2,7 +2,7 @@
 #include "Parser.class.hpp"
 
 Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock, bool addProcess)
-    : actualCycle(actualCycle), timeElapsed(timeElapsed), vProcess(vProcess), currentStock(currentStock), mutating(true) {
+    : actualCycle(actualCycle), timeElapsed(timeElapsed), vProcess(vProcess), currentStock(currentStock) {
 
     std::vector<Process> doableProcess = std::vector<Process>();
 	std::vector<Process> &vParserProcess = Parser::instance->getProcess();
@@ -148,13 +148,17 @@ void Gene::description(bool hash) const{
 	std::cout << "_____________________________________________" << std::endl;
 }
 
-DNA::DNA() : fitness(0), vGene (std::vector<Gene>()) {
+DNA::DNA() : fitness(0), mutatingNbr(0), vGene (std::vector<Gene>()) {
 	vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
+	createFollowingGenes(DNA_SIZE);
+}
+
+void DNA::createFollowingGenes(int size) {
 	int timeElapsed;
 	for (int i = 0; 1;) {
 		timeElapsed = firstEndedProcess(vGene.back().vProcess);
 		i += timeElapsed;
-		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == DNA_SIZE) {
+		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == (size_t)size) {
 			break ;
 		}
 		vGene.push_back(Gene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, true));
@@ -265,6 +269,17 @@ int DNA::firstEndedProcess(std::map<std::string, std::vector<int> > vProcess) {
 		}
 	}
 	return min;
+}
+
+void DNA::justMutation(int idx) {
+	if ((size_t)idx >= vGene.size()) {
+        return ;
+    }
+	int size = vGene.size();
+    vGene.erase(vGene.begin() + idx, vGene.end());
+	if (idx == 0)
+		vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
+	createFollowingGenes(size);
 }
 
 void DNA::description(bool hash) {

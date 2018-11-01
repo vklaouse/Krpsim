@@ -204,18 +204,13 @@ void Parser::runSimlation(int lifeTime) {
     // Find best path using genetic algo
     // 1) Create Initial population
     createFirstGen();
-    DNA *bestDNA = &(actualGen[0]);
-    for (auto &dna : actualGen) {
-        if (dna.evalFitness() > bestDNA->getFitness()) {
-            bestDNA = &dna;
-        }
-    }
-    // bestDNA->description();
 	size_t totalFit;
 	size_t idxParentA;
 	size_t idxParentB;
-    // while (clock() < killTime) {
-		totalFit = 0;
+
+    int gen = 1;
+    while (clock() < killTime) {
+		totalFit = 1;
         // 2) Rank solutions
 		for (auto &dna : actualGen) {
 			totalFit += dna.getFitness();
@@ -255,13 +250,28 @@ void Parser::runSimlation(int lifeTime) {
 					break ;
 			}
 			crossOver(idxParentA, idxParentB);
-            break;
-		}
-        // 3bis) Mutation
+            // 3bis) Mutation
+            mutation();
 
-    // }
+		}
+        actualGen = actualGen;
+        gen++;
+    }
 
     // Print best path
+    DNA *bestDNA = &(actualGen[0]);
+    for (auto &dna : actualGen) {
+        if (dna.evalFitness() > bestDNA->getFitness()) {
+            bestDNA = &dna;
+        }
+    }
+    bestDNA->description();
+    std::cout << "TotGen: " << gen << std::endl;
+}
+
+void Parser::mutation() {
+    int idx = rand() % (childGen.back().getGene().size() * 100);
+    childGen.back().justMutation(idx);
 }
 
 void Parser::crossOver(int firstDNA, int secondDNA) {

@@ -22,7 +22,6 @@ public:
 	std::string vProcessHash = "";
     std::map<std::string, std::vector<int> > vProcess;
     std::map<std::string, int> currentStock;
-	bool mutating;
 	std::map<std::string, int> initialStock;
 };
 
@@ -38,12 +37,17 @@ public:
 	void description(bool hash = false);
 	std::vector<Gene> & getGene() { return vGene; };
 	std::vector<Gene> getGeneCpy() { return vGene; };
+	std::vector<Gene> * getGenePtr() { return &vGene; };
+    int getMutatingNbr() { return mutatingNbr; };
+    void justMutation(int index);
+    void createFollowingGenes(int size);
 	static bool compareGenes(Gene &first, Gene &second);
 	static bool compareCurrentStock(std::map<std::string, int> &first, std::map<std::string, int> &second);
 	static bool compareCurrentProcess(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second);
 
 private:
     size_t fitness;
+    int mutatingNbr;
 	std::vector<std::string> vHash;
     std::vector<Gene> vGene;
 };
