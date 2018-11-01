@@ -6,17 +6,16 @@ struct Process;
 
 struct Gene {
 public:
-    Gene(int actualCycle, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock);
+    Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<int> > vProcess, std::map<std::string, int> currentStock);
     ~Gene() {};
 
-    void doableProcessGene(std::vector<Process> &doableProcess);
-	int doableProcessNbr(std::string name, std::map<std::string, int> tmpCurrentStock);
 	bool applyProcessToStock(std::string name, std::map<std::string, int> * stock, int nbrOfApply);
 	void refreshProcessDelay();
 	void addNewStock(std::string processName);
 	void description() const;
 
     int actualCycle;
+	int timeElapsed;
     std::map<std::string, std::vector<int> > vProcess;
     std::map<std::string, int> currentStock;
 	bool mutating;

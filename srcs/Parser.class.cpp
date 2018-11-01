@@ -210,7 +210,7 @@ void Parser::runSimlation(int lifeTime) {
             bestDNA = &dna;
         }
     }
-    // bestDNA->description();
+    bestDNA->description();
 
     // while (clock() < killTime) {
         // 2) Rank solutions
