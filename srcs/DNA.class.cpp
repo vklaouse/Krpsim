@@ -10,32 +10,52 @@ Gene::Gene(int actualCycle, std::map<std::string, std::vector<int> > vProcess, s
 	if (actualCycle != 0) {
 		refreshProcessDelay();
 	}
+	size_t maxDoable;
+	size_t tmpDoable;
+	size_t random;
+	bool firstCheck;
 	for (const auto &process : vParserProcess) {
-		bool doable = true;
+		firstCheck = true;
 		for (const auto &needStock : process.neededStock) {
-			if (this->currentStock[needStock.first] < needStock.second) {
-                doable = false;
-                break ;
-            }
+			tmpDoable = this->currentStock[needStock.first] / needStock.second;
+			if (firstCheck || tmpDoable < maxDoable) {
+				firstCheck = false;
+				maxDoable = tmpDoable;
+				if (maxDoable == 0)
+					break;
+			}
         }
-        if (doable)
-            doableProcess.push_back(process);
+        if (maxDoable > 0) {
+			random = Parser::instance->getRandom() % (maxDoable + 1);
+			std::vector<int> vDelay (random, process.delay + actualCycle);
+			applyProcessToStock(process.name, &(this->currentStock), random);
+			this->vProcess[process.name].insert(this->vProcess[process.name].end(), vDelay.begin(), vDelay.end());
+		}
     }
-	if (doableProcess.size() > 0)
-		doableProcessGene(doableProcess);
 }
 
 void Gene::refreshProcessDelay() {
 	size_t count = 0;
 	for (auto &process : vProcess) {
 		count = 0;
-		while (count <  process.second.size()) {
+		while (count < process.second.size()) {
 			if (process.second[count] > actualCycle) {
 				break;
 			}
-			addNewStock(process.first);
 			count++;
 		}
+
+		if (count > 0) {
+			for (const auto &processInfo : Parser::instance->getProcess()) {
+				if (processInfo.name.compare(process.first) == 0) {
+					for (const auto &resStock : processInfo.resultStock) {
+						currentStock[resStock.first] += resStock.second * count;
+					}
+					break ;
+				}
+			}
+		}
+
 		process.second.erase(process.second.begin(), process.second.begin() + count);
 	}
 }
@@ -47,20 +67,6 @@ void Gene::addNewStock(std::string processName) {
 				currentStock[resStock.first] += resStock.second;
 			}
 			break ;
-		}
-	}
-}
-
-void Gene::doableProcessGene(std::vector<Process> &doableProcess) {
-	int doable;
-	int random;
-	for (size_t i = 0; i < doableProcess.size(); i++) {
-		doable = doableProcessNbr(doableProcess[i].name, currentStock);
-		if (doable > 0) {
-			random = Parser::instance->getRandom() % doable;
-			std::vector<int> vDelay (random, doableProcess[i].delay + actualCycle);
-			applyProcessToStock(doableProcess[i].name, &currentStock, random);
-			vProcess[doableProcess[i].name].insert(vProcess[doableProcess[i].name].end(), vDelay.begin(), vDelay.end());
 		}
 	}
 }
@@ -78,16 +84,6 @@ bool Gene::applyProcessToStock(std::string name, std::map<std::string, int> * st
 		}
 	}
 	return true;
-}
-
-int Gene::doableProcessNbr(std::string name, std::map<std::string, int> tmpCurrentStock) {
-	int nbr = 0;
-	while (1) {
-		if (!applyProcessToStock(name, &tmpCurrentStock, 1))
-			break ;
-		nbr += 1;
-	}
-	return nbr;
 }
 
 void Gene::description() const{
