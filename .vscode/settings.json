@@ -18,6 +18,7 @@
         "utility": "cpp",
         "map": "cpp",
         "ostream": "cpp",
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "limits": "cpp"
     }
 }

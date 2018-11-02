@@ -33,7 +33,6 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
 				if (maxDoable > 0) {
 					canAddProcess = true;
 					random = Parser::instance->getRandom() % (maxDoable + 1);
-					// std::cerr << process.name << " -> " << z++ << ", Doable -> " << maxDoable << ", Random -> " << random << std::endl;
 					if (random > 0) {
 						hasAddedProcess = true;
 						std::vector<int> vDelay (random, (process.delay * -1));
@@ -161,8 +160,10 @@ void DNA::createFollowingGenes(int size) {
 		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == (size_t)size) {
 			break ;
 		}
-		vGene.push_back(Gene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, true));
+		Gene newGene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, true);
+		vGene.push_back(newGene);
 		if (std::find(vHash.begin(), vHash.end(), vGene.back().currentStockHash + vGene.back().vProcessHash) != vHash.end()) {
+			vGene.pop_back();
 			break ;
 		}
 		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
@@ -174,89 +175,58 @@ void DNA::createFollowingGenes(int size) {
 DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), vGene(std::vector<Gene>()) {
 	for (int i = 0; i < geneA; i++) {
 		vGene.push_back(first.getGeneCpy()[i]);
+		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
 	}
-	Gene tmpGeneA = first.getGeneCpy()[geneA];
-	int i;
-	for (const auto &process : tmpGeneA.vProcess) {
-		for (i = 0; i < (int)process.second.size(); i++) {
-			if (process.second[i] < 0)
-				break ;
-		}
-		if (i < (int)process.second.size())
-			tmpGeneA.vProcess[process.first].erase(tmpGeneA.vProcess[process.first].begin() + i, tmpGeneA.vProcess[process.first].end());
-	}
-
 	std::vector<Gene> vGeneB = second.getGeneCpy();
+	Gene tmpGeneA = first.getGeneCpy()[geneA];
 	Gene tmpGeneB = vGeneB[geneB];
-	for (const auto &process : tmpGeneB.vProcess) {
-		i = 0;
-		for (; i < (int)process.second.size(); i++) {
-			if (process.second[i] < 0)
-				break ;
+
+	// Find excess stock from geneA
+    std::map<std::string, int> excessStock;
+	for (auto const &aStock : tmpGeneA.initialStock) {
+		if (tmpGeneB.initialStock.find(aStock.first) == tmpGeneB.initialStock.end()) {
+			excessStock[aStock.first] += aStock.second;
 		}
-		if (i > 0)
-			tmpGeneB.vProcess[process.first].erase(tmpGeneB.vProcess[process.first].begin(), tmpGeneB.vProcess[process.first].begin() + i);
+		else {
+			excessStock[aStock.first] += aStock.second - tmpGeneB.initialStock[aStock.first];
+		}
 	}
 
-	for (auto processA : tmpGeneA.vProcess) {
-		tmpGeneB.vProcess[processA.first].insert(tmpGeneB.vProcess[processA.first].begin(), processA.second.begin(), processA.second.end());
-	}
+
 	tmpGeneB.actualCycle = tmpGeneA.actualCycle;
 	tmpGeneB.initialStock = tmpGeneA.initialStock;
-	tmpGeneB.currentStock = tmpGeneA.initialStock;
-	for (auto process : tmpGeneB.vProcess) {
-		int count = 0;
-		for (i = 0; i < (int)process.second.size(); i++) {
-			if (process.second[i] < 0)
-				count++;
-		}
-		if (count > 0)
-			tmpGeneB.applyProcessToStock(process.first, &(tmpGeneB.currentStock), count);
+	for (auto const &excess : excessStock) {
+		tmpGeneB.currentStock[excess.first] += excess.second;
 	}
 
-
-	// 2) Add create genes fro
 	tmpGeneB.updateHash();
 	vGene.push_back(tmpGeneB);
+	vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
+
+	// 2) Add create genes from parent B
 	int timeElapsed;
 	int actualCycle = tmpGeneB.actualCycle;
-	int originelTimeElapsed = -1;
-
 	for (size_t i = geneB + 1; i < vGeneB.size(); i++) {
 		timeElapsed = firstEndedProcess(vGene.back().vProcess);
 		if (timeElapsed == std::numeric_limits<int>::max())
 			break ;
 		actualCycle += timeElapsed;
-		if (i < second.getGene().size() - 1 && second.getGene()[i + 1].timeElapsed == originelTimeElapsed) {
-			originelTimeElapsed = -1;
-			tmpGeneB = vGeneB[i];
-			tmpGeneB.actualCycle = actualCycle;
-			tmpGeneB.timeElapsed = timeElapsed;
-			tmpGeneB.vProcess = vGene.back().vProcess;
-			tmpGeneB.currentStock = vGene.back().currentStock;
-			tmpGeneB.refreshProcessDelay();
-			tmpGeneB.updateHash();
-			vGene.push_back(tmpGeneB);
-		}
-		else if (i < second.getGene().size() - 1 && second.getGene()[i + 1].timeElapsed > timeElapsed) {
-			originelTimeElapsed  = second.getGene()[i + 1].timeElapsed;
-			vGene.push_back(Gene(actualCycle, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, false));
-			i--;
-		}
-		else {
-			tmpGeneB = vGeneB[i];
-			tmpGeneB.actualCycle = actualCycle;
-			tmpGeneB.timeElapsed = timeElapsed;
-			tmpGeneB.vProcess = vGene.back().vProcess;
-			tmpGeneB.currentStock = vGene.back().currentStock;
-			tmpGeneB.refreshProcessDelay();
-			tmpGeneB.updateHash();
-			vGene.push_back(tmpGeneB);
-		}
-		// At each gene, check if we dont need to put some of the excessProcess (or even create new Gene if delay is shorter)
 
-		// vGene.back().description();
+		tmpGeneB = vGeneB[i];
+		tmpGeneB.actualCycle = actualCycle;
+		tmpGeneB.timeElapsed = timeElapsed;
+
+
+		for (auto const &excess : excessStock) {
+			tmpGeneB.currentStock[excess.first] += excess.second;
+			tmpGeneB.initialStock[excess.first] += excess.second;
+		}
+
+		tmpGeneB.updateHash();
+		vGene.push_back(tmpGeneB);
+		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
 	}
+	evalFitness();
 }
 
 int DNA::firstEndedProcess(std::map<std::string, std::vector<int> > vProcess) {
@@ -275,11 +245,14 @@ void DNA::justMutation(int idx) {
 	if ((size_t)idx >= vGene.size()) {
         return ;
     }
+	vGene.erase(vGene.begin() + idx, vGene.end());
+	vHash.erase(vHash.begin() + idx, vHash.end());
 	int size = vGene.size();
-    vGene.erase(vGene.begin() + idx, vGene.end());
-	if (idx == 0)
+	if (idx == 0) {
 		vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
-	createFollowingGenes(size);
+	}
+	createFollowingGenes(vGene.size() + size);
+	evalFitness();
 }
 
 void DNA::description(bool hash) {
@@ -294,31 +267,50 @@ void DNA::description(bool hash) {
 bool DNA::compareGenes(Gene &first, Gene &second) {
 	if (!DNA::compareCurrentStock(first.initialStock, second.initialStock))
 		return false;
-	if (!DNA::compareCurrentProcess(first.vProcess, second.vProcess))
+	if (!DNA::compareCurrentProcess(first.vProcess, second.vProcess)) {
 		return false;
+	}
 	return true;
 }
 
 bool DNA::compareCurrentProcess(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second) {
+	size_t i;
+	for (auto f : first) {
+		for (i = 0; i < f.second.size(); i++) {
+			if (f.second[i] < 0)
+				break ;
+		}
+		first[f.first].erase(first[f.first].begin() + i, first[f.first].end());
+	}
+
+	for (auto f : second) {
+		for (i = 0; i < f.second.size(); i++) {
+			if (f.second[i] < 0)
+				break ;
+		}
+		second[f.first].erase(second[f.first].begin() + i, second[f.first].end());
+	}
+
 	for (const auto &f : first) {
-		for (size_t i = 0; i < f.second.size(); i++) {
-			if (second[f.first].size() > i && f.second[i] != second[f.first][i] && f.second[i] > 0 && second[f.first][i] > 0)
+		if (f.second.size() == 0) {
+			if (second.find(f.first) != second.end() && second[f.first].size() != 0)
 				return false;
 		}
+		else if (second.find(f.first) == second.end() || f.second != second[f.first])
+			return false;
 	}
 	return true;
 }
 
 bool DNA::compareCurrentStock(std::map<std::string, int> &first, std::map<std::string, int> &second) {
 	for (const auto &f : first) {
-		if (f.second > second[f.first])
+		if (f.second < second[f.first])
 			return false;
 	}
 	return true;
 }
 
 size_t DNA::evalFitness() {
-	// std::cout << std::endl << "--- " << std::endl;
 	fitness = 0;
 	for (const auto &optimizeGood : Parser::instance->getTierGoods()[0]) {
 		for (const auto &stock : vGene.back().currentStock) {
@@ -326,7 +318,6 @@ size_t DNA::evalFitness() {
 				fitness += pow(10, Parser::instance->getTierGoods().size() + 1) * stock.second;
 		}
 	}
-	// std::map<std::string, int> currentStock = vGene.back().currentStock;
 	// Give lots of points if an optimize product is in stock
 
 	// TODO: Give some points if intermediary products are in stock (the closest the product is to the goal, the higher the points)

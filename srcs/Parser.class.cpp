@@ -209,11 +209,16 @@ void Parser::runSimlation(int lifeTime) {
 
     int gen = 1;
     while (clock() < killTime) {
+        std::cout << "__new-gen__" << gen << std::endl; 
 		totalFit = 1;
+        size_t totalSize = 0;
         // 2) Rank solutions
 		for (auto &dna : actualGen) {
+            totalSize += dna.getGene().size();
 			totalFit += dna.getFitness();
 	    }
+        std::cout << "Avg gen size: " << (totalSize / actualGen.size()) << std::endl;
+        std::cout << "Avg fitness: " << (totalFit / actualGen.size()) << std::endl;
 
 
         // 3) Cross Over
@@ -223,7 +228,7 @@ void Parser::runSimlation(int lifeTime) {
             mutation();
 
 		}
-        actualGen = actualGen;
+        actualGen = childGen;
         gen++;
     }
 
@@ -285,6 +290,13 @@ void Parser::crossOver(size_t totalFit) {
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
 	compareDNAForCrossOver(actualGen[idxParentA], actualGen[idxParentB], &possibleCrossOver);
 
+    if (possibleCrossOver.size() == 0) {
+        // handle parents that cannot crossover except for start gene
+	    childGen.push_back(actualGen[idxParentA]);
+        childGen.back().justMutation(rand() % childGen.back().getGene().size());
+        return;
+    }
+
     int random = rand() % possibleCrossOver.size();
 	size_t geneA;
     for (const auto &mapValues : possibleCrossOver) {
@@ -303,8 +315,12 @@ void Parser::compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::
 	for (size_t i = 0; i < first.getGene().size(); i++) {
 		std::vector<int> fCrossover = std::vector<int>();
 		for (size_t j = 0; j < second.getGene().size(); j++) {
-			if (DNA::compareGenes(first.getGene()[i], second.getGene()[j]))
+            if (i == 0 && j == 0) {
+                continue;
+            }
+			if (DNA::compareGenes(first.getGene()[i], second.getGene()[j])) {
 				fCrossover.push_back(j);
+            }
 		}
 		if (fCrossover.size() > 0)
 			possibleCrossOver->insert(std::pair<int, std::vector<int>>(i, fCrossover));

@@ -3,8 +3,8 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define POPULATION_SIZE 2
-#define DNA_SIZE 100
+#define POPULATION_SIZE 50
+#define DNA_SIZE 500
 
 struct Process;
 

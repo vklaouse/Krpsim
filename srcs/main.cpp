@@ -50,12 +50,12 @@ int main(int ac, char **av) {
 			}
 			return 0;
 		}
-		// TODO:: no incest
 		// TODO:: fix size of DNA that is always 100
 		// TODO:: fix infinite loop woth benefice in pomme
 		// TODO: do not allow process that counter one another
 		// TODO: no crossover on gene 0
 		// TODO: detect infinite loop in recre -> get best loop
+		// TODO: better eval of prcess score
 		parser.runSimlation(lifeTime);
 	}
 	else {
