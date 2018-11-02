@@ -23,9 +23,9 @@ vente_boite:(boite:100):(euro:55000):30
 vente_tarte_pomme:(tarte_pomme:10):(euro:100):30
 vente_tarte_citron:(tarte_citron:10):(euro:200):30
 vente_flan:(flan:10):(euro:300):30
-do_benef:(euro:1):(benefice:1):1
+#do_benef:(euro:1):(benefice:1):1
 #
 #
-optimize:(benefice)
-#optimize:(euro)
+#optimize:(benefice)
+optimize:(euro)
 #

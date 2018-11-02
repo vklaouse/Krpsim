@@ -100,7 +100,27 @@ size_t Parser::addProcess(std::vector<Token> &tokens, size_t i) {
         if (quantity == 0) // skip if stock is not actually involved in process
             continue;
 
+
         resultStock[stockName] = quantity;
+    }
+
+    // Check if it's a process that makes you loose stock
+    bool isLosingProcess = true;
+    for (const auto &rStock : resultStock) {
+        if (neededStock.find(rStock.first) != neededStock.end()) {
+            if (neededStock[rStock.first] < rStock.second) {
+                isLosingProcess = false;
+                break;
+            }
+        }
+        else {
+            // If result is not in neededStock, then procces is not a loosing one
+            isLosingProcess = false;
+            break;
+        }
+    }
+    if (isLosingProcess) {
+        return i;
     }
 
 	int delay;
@@ -181,7 +201,10 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 		errors.push_back("Parser Error: Overflow detected (" + str + ")");
 		return false;
 	}
-
+    if (tmpVal == 0) {
+		errors.push_back("Parser Error: Numbers must be strictly positives");
+		return false;
+	}
 	*myInt = static_cast<int>(tmpVal);
 	return true;
 }
@@ -560,77 +583,6 @@ void Parser::createGoodsLeaderboard() {
 
 bool Parser::sortProcessFunction(Process const& lhs, Process const& rhs) {
     return lhs.score > rhs.score;
-
-    // int lBestTier = std::numeric_limits<int>::max();
-    // int rBestTier = std::numeric_limits<int>::max();
-
-    // Parser *parser = Parser::instance;
-    // for (size_t idx = 0; idx < parser->goodsTiers.size(); idx++) {
-    //     for (const auto &goodInTier : parser->goodsTiers[idx]) {
-    //         for (const auto &good : lhs.resultStock) {
-    //             if (good.first.compare(goodInTier.name) == 0) {
-    //                 lBestTier = idx;
-    //                 break;
-    //             }
-    //         }
-    //         if (lBestTier != std::numeric_limits<int>::max())
-    //             break;
-    //     }
-    //     if (lBestTier != std::numeric_limits<int>::max())
-    //         break;
-    // }
-
-    // for (size_t idx = 0; idx < parser->goodsTiers.size(); idx++) {
-    //     for (const auto &goodInTier : parser->goodsTiers[idx]) {
-    //         for (const auto &good : rhs.resultStock) {
-    //             if (good.first.compare(goodInTier.name) == 0) {
-    //                 rBestTier = idx;
-    //                 break;
-    //             }
-    //         }
-    //         if (rBestTier != std::numeric_limits<int>::max())
-    //             break;
-    //     }
-    //     if (rBestTier != std::numeric_limits<int>::max())
-    //         break;
-    // }
-
-    // if (lBestTier == rBestTier)
-    //     return Parser::instance->getProcessScore(lhs) > Parser::instance->getProcessScore(rhs);
-    // return lBestTier <= rBestTier;
-
-
-	// std::map<std::string, size_t> &wantedGoods = Parser::instance->getWantedGoods();
-
-    // size_t lScore = 0;
-    // for (const auto &good : lhs.resultStock) {
-    //     if (wantedGoods.find(good.first) != wantedGoods.end())
-    //         lScore += wantedGoods[good.first] * good.second;
-    // }
-    // size_t rScore = 0;
-    // for (const auto &good : rhs.resultStock) {
-    //     if (wantedGoods.find(good.first) != wantedGoods.end())
-    //         rScore += wantedGoods[good.first] * good.second;
-    // }
-
-    // if (rScore == lScore) {
-    // // if ((lScore > rScore && rScore + 30 > lScore) ||
-    // //     (rScore > lScore && lScore + 30 > rScore)) {
-    // // if (abs(static_cast<long long>(lScore - rScore) <= 100)) {
-    //     for (const auto &good : lhs.neededStock) {
-    //         if (wantedGoods.find(good.first) != wantedGoods.end())
-    //             lScore += wantedGoods[good.first] * good.second;
-    //     }
-    //     for (const auto &good : rhs.neededStock) {
-    //         if (wantedGoods.find(good.first) != wantedGoods.end())
-    //             rScore += wantedGoods[good.first] * good.second;
-    //     }
-    //     return lScore > rScore;
-    // }
-    // else
-    //     return lScore > rScore;
-
-    // return Parser::instance->getProcessScore(lhs) > Parser::instance->getProcessScore(rhs);
 }
 
 

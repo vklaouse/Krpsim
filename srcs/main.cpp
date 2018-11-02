@@ -50,13 +50,13 @@ int main(int ac, char **av) {
 			}
 			return 0;
 		}
-		// TODO:: fix size of DNA that is always 100
-		// TODO:: fix infinite loop woth benefice in pomme
+		// TODO:: fix infinite loop with benefice in recre
+		// TODO:: fix infinite loop with benefice in pomme
 		// TODO: do not allow process that counter one another
-		// TODO: no crossover on gene 0
 		// TODO: detect infinite loop in recre -> get best loop
 		// TODO: better eval of prcess score
-		parser.runSimlation(lifeTime);
+		// TODO: size of DNA must never be greater than ActualCycle
+		// parser.runSimlation(lifeTime);
 	}
 	else {
 		std::cerr << "Wrong number of parameters" << std::endl;

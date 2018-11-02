@@ -154,7 +154,8 @@ DNA::DNA() : fitness(0), mutatingNbr(0), vGene (std::vector<Gene>()) {
 
 void DNA::createFollowingGenes(int size) {
 	int timeElapsed;
-	for (int i = 0; 1;) {
+	int i = vGene.back().actualCycle;
+	while (true) {
 		timeElapsed = firstEndedProcess(vGene.back().vProcess);
 		i += timeElapsed;
 		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == (size_t)size) {
