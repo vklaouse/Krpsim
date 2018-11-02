@@ -320,9 +320,11 @@ bool DNA::compareCurrentStock(std::map<std::string, int> &first, std::map<std::s
 size_t DNA::evalFitness() {
 	// std::cout << std::endl << "--- " << std::endl;
 	fitness = 0;
-	for (const auto &stock : Parser::instance->getWantedGoods()) {
-	// for (const auto &stock : vGene.back().currentStock) {
-		fitness += vGene.back().currentStock[stock.first] * stock.second;
+	for (const auto &optimizeGood : Parser::instance->getTierGoods()[0]) {
+		for (const auto &stock : vGene.back().currentStock) {
+			if (optimizeGood.name.compare(stock.first) == 0)
+				fitness += pow(10, Parser::instance->getTierGoods().size() + 1) * stock.second;
+		}
 	}
 	// std::map<std::string, int> currentStock = vGene.back().currentStock;
 	// Give lots of points if an optimize product is in stock
@@ -332,6 +334,14 @@ size_t DNA::evalFitness() {
 	// Score based on current stock * rarity
 
 	// TODO: Give some points for active process
+
+	for (const auto &startedProcess : vGene.back().vProcess) {
+		for (const auto &process : Parser::instance->getProcess()) {
+			if (process.name.compare(startedProcess.first) == 0) {
+				fitness += process.score * startedProcess.second.size();
+			}
+		}
+	}
 
 	// TODO: Give some points if initial stock is here but not goals
 

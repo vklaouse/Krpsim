@@ -191,22 +191,21 @@ void Parser::runSimlation(int lifeTime) {
     (void)killTime;
 
     createGoodsLeaderboard();
+    setProcessScores();
     // std::cout << "+++++++++++++++++++++++++" << std::endl;
     // for (auto const &proc : vProcess) {
     //     std::cout << proc.name << std::endl;
     // }
     std::sort(vProcess.begin(), vProcess.end(), &Parser::sortProcessFunction);
-    // std::cout << "+++++++++++++++++++++++++" << std::endl;
-    // for (auto const &proc : vProcess) {
-    //     std::cout << proc.name << std::endl;
-    // }
+    std::cout << "++++++++++ Process Leaderboard +++++++++++++++" << std::endl;
+    for (auto const &proc : vProcess) {
+        std::cout << proc.name << " " << proc.score << std::endl;
+    }
 
     // Find best path using genetic algo
     // 1) Create Initial population
     createFirstGen();
 	size_t totalFit;
-	size_t idxParentA;
-	size_t idxParentB;
 
     int gen = 1;
     while (clock() < killTime) {
@@ -219,37 +218,7 @@ void Parser::runSimlation(int lifeTime) {
 
         // 3) Cross Over
 		for (size_t i = 0; i < POPULATION_SIZE; i++) {
-			size_t somePartOfTotalFit = rand() % totalFit;
-			size_t somePartOfTotalFit2 = rand() % totalFit;
-			idxParentA = 0;
-			idxParentB = 0;
-			for (size_t i = 0; i < POPULATION_SIZE; i++) {
-				if (somePartOfTotalFit > 0) {
-					if (somePartOfTotalFit < actualGen[i].getFitness()) {
-						// parent A found !
-						idxParentA = i;
-						somePartOfTotalFit = 0;
-					}
-					else {
-						somePartOfTotalFit -= actualGen[i].getFitness();
-					}
-				}
-
-				if (somePartOfTotalFit2 > 0) {
-					if (somePartOfTotalFit2 < actualGen[i].getFitness()) {
-						// parent B found !
-						idxParentB = i;
-						somePartOfTotalFit2 = 0;
-					}
-					else {
-						somePartOfTotalFit2 -= actualGen[i].getFitness();
-					}
-				}
-
-				if (somePartOfTotalFit == 0 && somePartOfTotalFit2 == 0)
-					break ;
-			}
-			crossOver(idxParentA, idxParentB);
+			crossOver(totalFit);
             // 3bis) Mutation
             mutation();
 
@@ -274,9 +243,47 @@ void Parser::mutation() {
     childGen.back().justMutation(idx);
 }
 
-void Parser::crossOver(int firstDNA, int secondDNA) {
+void Parser::crossOver(size_t totalFit) {
+    size_t somePartOfTotalFit = rand() % totalFit;
+    size_t somePartOfTotalFit2 = rand() % totalFit;
+    int idxParentA = 0;
+    int idxParentB = 0;
+    for (size_t i = 0; i < POPULATION_SIZE; i++) {
+        if (somePartOfTotalFit > 0) {
+            if (somePartOfTotalFit < actualGen[i].getFitness()) {
+                // parent A found !
+                idxParentA = i;
+                somePartOfTotalFit = 0;
+            }
+            else {
+                somePartOfTotalFit -= actualGen[i].getFitness();
+            }
+        }
+
+        if (somePartOfTotalFit2 > 0) {
+            if (somePartOfTotalFit2 < actualGen[i].getFitness()) {
+                // parent B found !
+                idxParentB = i;
+                somePartOfTotalFit2 = 0;
+            }
+            else {
+                somePartOfTotalFit2 -= actualGen[i].getFitness();
+            }
+        }
+
+        if (somePartOfTotalFit == 0 && somePartOfTotalFit2 == 0)
+            break ;
+    }
+    // If same parent has been chosen, then no crossOver will happen
+    if (idxParentA == idxParentB) {
+	    childGen.push_back(actualGen[idxParentA]);
+        return;
+    }
+
+
+    // Find on which genes the crossover can happen
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
-	compareDNAForCrossOver(actualGen[firstDNA], actualGen[secondDNA], &possibleCrossOver);
+	compareDNAForCrossOver(actualGen[idxParentA], actualGen[idxParentB], &possibleCrossOver);
 
     int random = rand() % possibleCrossOver.size();
 	size_t geneA;
@@ -289,8 +296,7 @@ void Parser::crossOver(int firstDNA, int secondDNA) {
     }
     random = rand() % possibleCrossOver[geneA].size();
 	size_t geneB = possibleCrossOver[geneA][random];
-	childGen.push_back(DNA(actualGen[firstDNA], actualGen[secondDNA], geneA, geneB));
-    // childGen.back().description();
+	childGen.push_back(DNA(actualGen[idxParentA], actualGen[idxParentB], geneA, geneB));
 }
 
 void Parser::compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver) {
@@ -316,11 +322,11 @@ void Parser::createFirstGen() {
 void Parser::createGoodsLeaderboard() {
     wantedGoods = std::map<std::string, size_t>();
     std::map<std::string, size_t> tmpWantedGoods = std::map<std::string, size_t>();
-    std::vector<std::vector<GoodInfo> > goodsTiers = std::vector<std::vector<GoodInfo> >();
+    goodsTiers = std::vector<std::vector<GoodInfo> >();
     std::vector<GoodInfo> oldTier = std::vector<GoodInfo>();
     // Fill first tier
 	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
-        oldTier.push_back(GoodInfo(goal->name));
+        oldTier.push_back(GoodInfo(goal->name, 1));
     }
     goodsTiers.push_back(oldTier);
     std::vector<GoodInfo> newTier = std::vector<GoodInfo>();
@@ -358,7 +364,7 @@ void Parser::createGoodsLeaderboard() {
                                                 }
                                             }
                                             if (!isSelfMaintained) {
-                                                newTier[idx].timesNeededByHigherStock++;
+                                                newTier[idx].timesNeededByHigherStock += process.resultStock.at(good.name);
                                             }
                                             break;
                                         }
@@ -382,7 +388,10 @@ void Parser::createGoodsLeaderboard() {
                                                     }
                                                 }
                                                 if (!isSelfMaintained) {
-                                                    (tierIdx == goodsTiers.size() - 1) ? goodsTiers[tierIdx][idx].timesNeededByTierStock++ : goodsTiers[tierIdx][idx].timesNeededByLowerStock++;
+                                                    if (tierIdx == goodsTiers.size() - 1)
+                                                        goodsTiers[tierIdx][idx].timesNeededByTierStock += process.resultStock.at(good.name);
+                                                    else
+                                                        goodsTiers[tierIdx][idx].timesNeededByLowerStock += process.resultStock.at(good.name);
                                                 }
                                                 break;
                                             }
@@ -393,7 +402,7 @@ void Parser::createGoodsLeaderboard() {
                                         tierIdx++;
                                     }
                                     if (!found) {
-                                        newTier.push_back(GoodInfo(neededGood.first));
+                                        newTier.push_back(GoodInfo(neededGood.first, process.resultStock.at(good.name)));
                                     }
                                 }
                                 break;
@@ -414,26 +423,26 @@ void Parser::createGoodsLeaderboard() {
     size_t score = 0;
     size_t tierScore = 0;
     size_t idx = 0;
-    // std::cout << "--- Tiers ----------------------------------------" << std::endl;
+    std::cout << "--- Tiers ----------------------------------------" << std::endl;
     for (const auto &tier : goodsTiers) {
         // Little bonus for higher tier
-        // std::cout << "  --   T" << idx << "   --" << std::endl;
-        tierScore = goodsTiers.size() - idx;
+        std::cout << "  --   T" << idx << "   --" << std::endl;
+        tierScore = pow(goodsTiers.size() - idx, 2);
         for (const auto &good : tier) {
             score = tierScore;
             score += good.timesNeededByHigherStock;
-            score += sqrt(good.timesNeededByTierStock);
-            score += sqrt(sqrt(good.timesNeededByLowerStock));
+            score += good.timesNeededByTierStock / 2;
+            score += sqrt(good.timesNeededByLowerStock);
 
             // Save scores in easier to handle way
             tmpWantedGoods[good.name] = score;
 
             // Debug
-            // std::cout << good.name << std::endl;
-            // std::cout << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
-            // std::cout << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
-            // std::cout << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
-            // std::cout << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
+            std::cout << good.name << std::endl;
+            std::cout << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
+            std::cout << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
+            std::cout << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
+            std::cout << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
         }
         idx++;
     }
@@ -442,15 +451,18 @@ void Parser::createGoodsLeaderboard() {
     std::map<std::string, size_t> childsScore = std::map<std::string, size_t>();
     std::map<std::string, size_t> newWantedGoods = std::map<std::string, size_t>();
     idx = goodsTiers.size() - 1;
+    size_t bestScore = 0;
+    size_t tmpScore = 0;
     while (idx < goodsTiers.size()) {
         newWantedGoods.clear();
         for (const auto &good : goodsTiers[idx]) {
             // Retrieve value that we got before
             newWantedGoods[good.name] = tmpWantedGoods[good.name];
 
-            // Search for goods that are used to make current one
+            // Search for goods that are used to make current one (except lowest tier)
             if (idx < goodsTiers.size() - 1) {
                 childsScore.clear();
+                bestScore = 0;
                 for (const auto &stockInfo : vStock) {
                     if (stockInfo.name.compare(good.name) == 0) {
                         for (const auto &processName : stockInfo.waysToProduce) {
@@ -465,33 +477,53 @@ void Parser::createGoodsLeaderboard() {
                                         }
                                     }
 
+                                    tmpScore = 0;
                                     for (const auto &neededGood : process.neededStock) {
-                                        // Skip good if it has not been saved since it must be of an upper tier
-                                        if (wantedGoods.find(neededGood.first) == wantedGoods.end())
+                                        // Skip if neededGood is not actually used in process
+                                        if (process.resultStock.find(neededGood.first) != process.resultStock.end() && neededGood.second >= process.resultStock.at(neededGood.first)) {
                                             continue;
+                                        }
 
-                                        auto it = childsScore.find(neededGood.first);
-                                        if (it == childsScore.end()) {
-                                            childsScore[neededGood.first] = neededGood.second;
+                                        // If needs good from same or higher tier then get its temporary value
+                                        if (wantedGoods.find(neededGood.first) == wantedGoods.end()) {
+                                            tmpScore += tmpWantedGoods[neededGood.first] * neededGood.second;
                                         }
-                                        else if (it->second > childsScore[neededGood.first]) {
-                                            childsScore[neededGood.first] = it->second;
+                                        else { // Else get final value
+                                            tmpScore += wantedGoods[neededGood.first] * neededGood.second;
                                         }
+
+                                        // auto it = childsScore.find(neededGood.first);
+                                        // if (it == childsScore.end()) {
+                                        //     childsScore[neededGood.first] = neededGood.second;
+                                        // }
+                                        // else if (it->second > childsScore[neededGood.first]) {
+                                        //     childsScore[neededGood.first] = it->second;
+                                        // }
                                     }
+
+                                    // tmpScore /= process.resultStock.at(good.name); // Divide score by how many of this good will be produced
+                                    if (tmpScore > bestScore) {
+                                        bestScore = tmpScore;
+                                    }
+                                    // else if (idx != 0 && tmpScore < bestScore) {
+                                    //     bestScore = tmpScore;
+                                    // }
                                     break;
                                 }
                             }
                         }
                     }
                 }
+
+                newWantedGoods[good.name] += bestScore;
             }
 
             // Increase good score by mult with all of its childs
             // std::cout << "How to get " << good.name << " --> ";
-            for (const auto &childScore : childsScore) {
-                // std::cout << " |" << childScore.first << " * " << childScore.second << "| ";
-                newWantedGoods[good.name] += childScore.second * wantedGoods[childScore.first];
-            }
+            // for (const auto &childScore : childsScore) {
+            //     // std::cout << " |" << childScore.first << " * " << childScore.second << "| ";
+            //     newWantedGoods[good.name] += childScore.second * wantedGoods[childScore.first];
+            // }
             // std::cout << std::endl;
         }
         // Add newWantedGoods to final map
@@ -503,45 +535,110 @@ void Parser::createGoodsLeaderboard() {
         idx--;
     }
 
-    // std::cout << std::endl << "--- Goods Ratings" << std::endl;
-	// for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
-	// 	std::cout << test->first << ": " << test->second << std::endl;
-	// }
+    std::cout << std::endl << "--- Goods Ratings" << std::endl;
+	for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
+		std::cout << test->first << ": " << test->second << std::endl;
+	}
 }
 
 
 bool Parser::sortProcessFunction(Process const& lhs, Process const& rhs) {
-	std::map<std::string, size_t> &wantedGoods = Parser::instance->getWantedGoods();
+    return lhs.score > rhs.score;
 
-    size_t lScore = 0;
-    for (const auto &good : lhs.resultStock) {
-        if (wantedGoods.find(good.first) != wantedGoods.end())
-            lScore += wantedGoods[good.first] * good.second;
-    }
-    size_t rScore = 0;
-    for (const auto &good : rhs.resultStock) {
-        if (wantedGoods.find(good.first) != wantedGoods.end())
-            rScore += wantedGoods[good.first] * good.second;
-    }
+    // int lBestTier = std::numeric_limits<int>::max();
+    // int rBestTier = std::numeric_limits<int>::max();
 
-    if (rScore == lScore) {
-    // if ((lScore > rScore && rScore + 30 > lScore) ||
-    //     (rScore > lScore && lScore + 30 > rScore)) {
-    // if (abs(static_cast<long long>(lScore - rScore) <= 100)) {
-        for (const auto &good : lhs.neededStock) {
-            if (wantedGoods.find(good.first) != wantedGoods.end())
-                lScore += wantedGoods[good.first] * good.second;
-        }
-        for (const auto &good : rhs.neededStock) {
-            if (wantedGoods.find(good.first) != wantedGoods.end())
-                rScore += wantedGoods[good.first] * good.second;
-        }
-        return lScore > rScore;
-    }
-    else
-        return lScore > rScore;
+    // Parser *parser = Parser::instance;
+    // for (size_t idx = 0; idx < parser->goodsTiers.size(); idx++) {
+    //     for (const auto &goodInTier : parser->goodsTiers[idx]) {
+    //         for (const auto &good : lhs.resultStock) {
+    //             if (good.first.compare(goodInTier.name) == 0) {
+    //                 lBestTier = idx;
+    //                 break;
+    //             }
+    //         }
+    //         if (lBestTier != std::numeric_limits<int>::max())
+    //             break;
+    //     }
+    //     if (lBestTier != std::numeric_limits<int>::max())
+    //         break;
+    // }
+
+    // for (size_t idx = 0; idx < parser->goodsTiers.size(); idx++) {
+    //     for (const auto &goodInTier : parser->goodsTiers[idx]) {
+    //         for (const auto &good : rhs.resultStock) {
+    //             if (good.first.compare(goodInTier.name) == 0) {
+    //                 rBestTier = idx;
+    //                 break;
+    //             }
+    //         }
+    //         if (rBestTier != std::numeric_limits<int>::max())
+    //             break;
+    //     }
+    //     if (rBestTier != std::numeric_limits<int>::max())
+    //         break;
+    // }
+
+    // if (lBestTier == rBestTier)
+    //     return Parser::instance->getProcessScore(lhs) > Parser::instance->getProcessScore(rhs);
+    // return lBestTier <= rBestTier;
+
+
+	// std::map<std::string, size_t> &wantedGoods = Parser::instance->getWantedGoods();
+
+    // size_t lScore = 0;
+    // for (const auto &good : lhs.resultStock) {
+    //     if (wantedGoods.find(good.first) != wantedGoods.end())
+    //         lScore += wantedGoods[good.first] * good.second;
+    // }
+    // size_t rScore = 0;
+    // for (const auto &good : rhs.resultStock) {
+    //     if (wantedGoods.find(good.first) != wantedGoods.end())
+    //         rScore += wantedGoods[good.first] * good.second;
+    // }
+
+    // if (rScore == lScore) {
+    // // if ((lScore > rScore && rScore + 30 > lScore) ||
+    // //     (rScore > lScore && lScore + 30 > rScore)) {
+    // // if (abs(static_cast<long long>(lScore - rScore) <= 100)) {
+    //     for (const auto &good : lhs.neededStock) {
+    //         if (wantedGoods.find(good.first) != wantedGoods.end())
+    //             lScore += wantedGoods[good.first] * good.second;
+    //     }
+    //     for (const auto &good : rhs.neededStock) {
+    //         if (wantedGoods.find(good.first) != wantedGoods.end())
+    //             rScore += wantedGoods[good.first] * good.second;
+    //     }
+    //     return lScore > rScore;
+    // }
+    // else
+    //     return lScore > rScore;
 
     // return Parser::instance->getProcessScore(lhs) > Parser::instance->getProcessScore(rhs);
+}
+
+
+void Parser::setProcessScores() {
+
+    // size_t tierScore = pow(10, goodsTiers.size() - idx);
+    for (size_t processIdx = 0; processIdx < vProcess.size(); processIdx++) {
+        vProcess[processIdx].score = 0;
+        size_t idx = 0;
+        for (; idx < goodsTiers.size(); idx++) {
+            for (const auto &goodInTier : goodsTiers[idx]) {
+                for (const auto &good : vProcess[processIdx].resultStock) {
+                    if (good.first.compare(goodInTier.name) == 0) {
+                        vProcess[processIdx].score = pow(10, goodsTiers.size() - idx);
+                        break;
+                    }
+                }
+                if (vProcess[processIdx].score != 0)
+                    break;
+            }
+            if (vProcess[processIdx].score != 0)
+                break;
+        }
+    }
 }
 
 size_t Parser::getProcessScore(Process const& process) {

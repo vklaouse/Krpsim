@@ -3,7 +3,7 @@
 #include "Krpsim.hpp"
 #include "DNA.class.hpp"
 
-#define POPULATION_SIZE 50
+#define POPULATION_SIZE 2
 #define DNA_SIZE 100
 
 struct Process;
@@ -29,6 +29,7 @@ public:
     std::map<std::string, int> neededStock;
     std::map<std::string, int> resultStock;
     int delay;
+    size_t score;
 };
 
 struct Goal {
@@ -42,8 +43,8 @@ public:
 
 struct GoodInfo {
 public:
-    GoodInfo(std::string name)
-        : name(name), timesNeededByHigherStock(1), timesNeededByLowerStock(0),
+    GoodInfo(std::string name, int timesNeededByHigherStock)
+        : name(name), timesNeededByHigherStock(timesNeededByHigherStock), timesNeededByLowerStock(0),
         timesNeededByTierStock(0), avgDelay(0) {};
     ~GoodInfo() {};
     std::string name;
@@ -67,6 +68,7 @@ public:
 	std::vector<std::string> &getErrors() { return errors; };
 	std::map<std::string, int> getStartStock() { return startStock; };
 	std::map<std::string, size_t> &getWantedGoods() { return wantedGoods; };
+	std::vector<std::vector<GoodInfo> > &getTierGoods() { return goodsTiers; };
     // size_t &getRandom() { myRandom = myRandom * 3 + 1; return (size_t)(rand()); }
     size_t getRandom() { return (size_t)(rand()); }
 
@@ -80,9 +82,10 @@ private:
 	bool saveStrInInt(std::string &str, int *myInt);
     void createFirstGen();
     void createGoodsLeaderboard();
+    void setProcessScores();
     static bool sortProcessFunction(Process const& lhs, Process const& rhs);
     size_t getProcessScore(Process const& process);
-	void crossOver(int firstDNA, int secondDNA);
+	void crossOver(size_t totalFit);
     void mutation();
 	void compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver);
 
@@ -92,6 +95,7 @@ private:
 	std::vector<std::string> errors;
 
     std::map<std::string, int> startStock;
+    std::vector<std::vector<GoodInfo> > goodsTiers;
 	std::map<std::string, size_t> wantedGoods;
     std::vector<DNA> actualGen;
     std::vector<DNA> childGen;
