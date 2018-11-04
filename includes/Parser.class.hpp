@@ -59,6 +59,7 @@ class Parser {
 public:
     static Parser *instance;
 
+	Parser() {};
     Parser(std::vector<Token> &tokens);
     ~Parser();
 
@@ -74,7 +75,7 @@ public:
 
     void runSimlation(int lifeTime);
 
-private:
+protected:
     void addToStock(std::string name, int quantity);
     size_t addProcess(std::vector<Token> &tokens, size_t i);
     void addProcessReferenceToStock(std::string stockName, Process*newProcess);

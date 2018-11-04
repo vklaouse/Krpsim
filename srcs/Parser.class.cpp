@@ -38,6 +38,10 @@ Parser::Parser(std::vector<Token> &tokens) : myRandom(rand()) {
     if (errors.size() == 0) {
         Parser::instance = this;
     }
+	startStock = std::map<std::string, int>();
+    for (auto it = vStock.begin(); it != vStock.end(); it++) {
+        startStock[it->name] = it->quantity;
+    }
 }
 
 Parser::~Parser() {
@@ -211,7 +215,7 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 
 void Parser::runSimlation(int lifeTime) {
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
-    (void)killTime;
+    // (void)killTime;
 
     createGoodsLeaderboard();
     setProcessScores();
@@ -232,7 +236,7 @@ void Parser::runSimlation(int lifeTime) {
 
     int gen = 1;
     while (clock() < killTime) {
-        std::cout << "__new-gen__" << gen << std::endl; 
+        std::cout << "__new-gen__" << gen << std::endl;
 		totalFit = 1;
         size_t totalSize = 0;
         // 2) Rank solutions
@@ -351,10 +355,10 @@ void Parser::compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::
 }
 
 void Parser::createFirstGen() {
-    startStock = std::map<std::string, int>();
-    for (auto it = vStock.begin(); it != vStock.end(); it++) {
-        startStock[it->name] = it->quantity;
-    }
+    // startStock = std::map<std::string, int>();
+    // for (auto it = vStock.begin(); it != vStock.end(); it++) {
+    //     startStock[it->name] = it->quantity;
+    // }
     actualGen = std::vector<DNA> (POPULATION_SIZE);
 }
 

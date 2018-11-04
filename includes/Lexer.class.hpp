@@ -5,13 +5,14 @@
 class Lexer {
 
 public:
+	Lexer() {};
 	Lexer(char *filePath);
 	~Lexer();
 
 	std::vector<std::string> &getErrors() { return errors; };
 	std::vector<Token> &getTokens() { return tokens; };
 
-private:
+protected:
 	void createStock(std::string str, TokenType tokenType, size_t i);
 	bool tokenizeStock(std::string *toParse, size_t i, TokenType tokenType);
 	void tokenizeGroupStock(size_t i, std::string groupStock, TokenType tokenType);

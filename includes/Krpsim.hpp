@@ -18,7 +18,8 @@ enum TokenType {
 	needed_stock,
 	result_stock,
 	delay,
-	optimize
+	optimize,
+	cycle
 };
 
 struct Token {
