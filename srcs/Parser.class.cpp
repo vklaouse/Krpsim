@@ -265,8 +265,8 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
         }
     }
     // Print solution
-    // bestDNA->description();
-    bestDNA->printSolution();
+    bestDNA->description();
+    // bestDNA->printSolution();
 }
 
 size_t Parser::getGenerationFitness(int generationCycle) {
@@ -371,10 +371,6 @@ void Parser::compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::
 }
 
 void Parser::createFirstGen() {
-    // startStock = std::map<std::string, int>();
-    // for (auto it = vStock.begin(); it != vStock.end(); it++) {
-    //     startStock[it->name] = it->quantity;
-    // }
     actualGen = std::vector<DNA> (POPULATION_SIZE);
 }
 

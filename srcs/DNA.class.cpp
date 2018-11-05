@@ -149,6 +149,14 @@ void Gene::description(bool hash) const{
 
 DNA::DNA() : fitness(0), mutatingNbr(0), vGene (std::vector<Gene>()) {
 	vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
+
+	initialStockExpenses = std::map<std::string, int>();
+	for (const auto stock : vGene.front().currentStock) {
+		if (stock.second < vGene.front().initialStock[stock.first]) {
+			initialStockExpenses[stock.first] = -(vGene.front().initialStock[stock.first] - stock.second);
+		}
+	}
+
 	createFollowingGenes(DNA_SIZE);
 }
 
@@ -158,6 +166,7 @@ void DNA::createFollowingGenes(int size) {
 	while (true) {
 		timeElapsed = firstEndedProcess(vGene.back().vProcess);
 		i += timeElapsed;
+
 		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == (size_t)size) {
 			break ;
 		}
@@ -168,6 +177,10 @@ void DNA::createFollowingGenes(int size) {
 			break ;
 		}
 		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
+
+		// if we have more stock than after the first cycle, then we have found a self maintained loop
+		// if (isSelfMaintained())
+		// 	break;
 	}
 	// description();
 	evalFitness();
@@ -263,6 +276,7 @@ void DNA::description(bool hash) {
 	}
 	std::cout << "DNA size      : " << vGene.size() << std::endl;
 	std::cout << "Fitness value : " << fitness << std::endl;
+	std::cout << "Is self maintained : " << hasSelfMaintainedProduction << std::endl;
 }
 
 void DNA::printSolution() {
@@ -369,5 +383,43 @@ size_t DNA::evalFitness() {
 	// fitness = pow(fitness, 2);
 	// std::cout << "Fitness " << fitness << std::endl;
 
+	// Give lots of point if selfMantained cycle has been found
+	if (hasSelfMaintainedProduction) {
+		fitness += pow(10, Parser::instance->getTierGoods().size() + 3);
+	}
+
 	return fitness;
+}
+
+bool DNA::isSelfMaintained() {
+	hasSelfMaintainedProduction = true;
+	hasSelfMaintainedProduction = false;
+	// for (const auto initStock : initialStockExpenses) {
+	// 	int stockDifference = vGene.back().initialStock[initStock.first] - vGene[vGene.size() - 2].currentStock[initStock.first];
+	// 	initialStockExpenses[initStock.first] += stockDifference;
+	// 	if (initialStockExpenses[initStock.first] < 0)
+	// 		hasSelfMaintainedProduction = false;
+	// }
+	if (hasSelfMaintainedProduction) {
+		// If we are in self maintained cycle then clear all process started these cycle
+		size_t i;
+		for (const auto &process :  vGene.back().vProcess) {
+			for (i = 0; i < process.second.size(); i++) {
+				if (process.second[i] < 0)
+					break;
+			}
+			if (i < process.second.size()) {
+				for (const auto &processInfo : Parser::instance->getProcess()) {
+					if (processInfo.name.compare(process.first) == 0) {
+						for (const auto &resStock : processInfo.resultStock) {
+							vGene.back().currentStock[resStock.first] += resStock.second * i;
+						}
+						break ;
+					}
+				}
+				vGene.back().vProcess[process.first].erase(vGene.back().vProcess[process.first].begin() + i, vGene.back().vProcess[process.first].end());
+			}
+		}
+	}
+	return hasSelfMaintainedProduction;
 }

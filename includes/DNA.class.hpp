@@ -47,8 +47,11 @@ public:
 	void printSolution();
 
 private:
+	bool isSelfMaintained();
+	bool hasSelfMaintainedProduction;
     size_t fitness;
     int mutatingNbr;
 	std::vector<std::string> vHash;
     std::vector<Gene> vGene;
+    std::map<std::string, int> initialStockExpenses;
 };
