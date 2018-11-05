@@ -169,12 +169,12 @@ void Gene::description(bool hash) const{
 	std::cerr << "_____________________________________________" << std::endl;
 }
 
-DNA::DNA() : fitness(0), mutatingNbr(0), vGene (std::vector<Gene>()) {
+DNA::DNA() : fitness(0), hasSelfMaintainedProduction(false), vGene (std::vector<Gene>()) {
 	vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
 	createFollowingGenes(DNA_SIZE);
 }
 
-void DNA::createFollowingGenes(int size) {
+void DNA::createFollowingGenes(int size, bool addProcess) {
 	int timeElapsed;
 	int i = vGene.back().actualCycle;
 	while (true) {
@@ -185,7 +185,7 @@ void DNA::createFollowingGenes(int size) {
 			isSelfMaintained();
 			break ;
 		}
-		Gene newGene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, true);
+		Gene newGene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, addProcess);
 		vGene.push_back(newGene);
 		if (std::find(vHash.begin(), vHash.end(), vGene.back().currentStockHash + vGene.back().vProcessHash) != vHash.end()) {
 			vGene.pop_back();
@@ -197,7 +197,7 @@ void DNA::createFollowingGenes(int size) {
 	evalFitness();
 }
 
-DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), vGene(std::vector<Gene>()) {
+DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), hasSelfMaintainedProduction(false), vGene(std::vector<Gene>()) {
 	for (int i = 0; i < geneA; i++) {
 		vGene.push_back(first.getGeneCpy()[i]);
 		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
@@ -297,9 +297,9 @@ void DNA::justMutation(int idx) {
 	if ((size_t)idx >= vGene.size()) {
         return ;
     }
+	int size = vGene.size();
 	vGene.erase(vGene.begin() + idx, vGene.end());
 	vHash.erase(vHash.begin() + idx, vHash.end());
-	int size = vGene.size();
 	if (idx == 0) {
 		vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
 	}

@@ -19,6 +19,7 @@ private:
 	void applyDelay();
 	void saveProcessWithDelay(std::vector<std::string> vProcess);
 	void applyToStock(bool addToStock, int nbrOfApply, std::string processName);
+	void displayResult();
 
 	std::map<std::string, int> mStock;
 	std::map<std::string, int> mOriginStock;
@@ -26,6 +27,4 @@ private:
 	std::map<std::string, std::vector<int>> mChecker;
 	std::vector<std::string> errors;
 	int endCycle;
-
-
 };

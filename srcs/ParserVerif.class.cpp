@@ -35,7 +35,6 @@ ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 			}
 			int myInt = 0;
 			saveStrInInt(tokens[i].info, &myInt);
-			std::cerr << myInt << std::endl;
 			mProcess[myInt] = operations;
 			if (endCycle < myInt)
 				endCycle = myInt;
@@ -47,18 +46,33 @@ ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 void ParserVerif::checker() {
 	saveProcessWithDelay(mProcess[0]);
 	if (endCycle == 0) {
-		for (const auto &s : mOriginStock) {
-			std::cout  << s.first << " " << s.second << std::endl;
-		}
+		displayResult();
 	}
 	for (size_t i = 1; i <= (size_t)endCycle; i++) {
 		applyDelay();
 		saveProcessWithDelay(mProcess[i]);
 		if (i == (size_t)endCycle) {
-			for (const auto &s : mOriginStock) {
-				std::cout  << s.first << " " << s.second << std::endl;
-			}
+			displayResult();
 		}
+	}
+}
+
+void ParserVerif::displayResult() {
+	for (const auto &s : mOriginStock) {
+		if (s.second != mStock[s.first]) {
+			std::cerr << "Expected result : " << std::endl;
+			for (const auto &s : mStock) {
+				std::cerr  << "\t" << s.first << " " << s.second << std::endl;
+			}
+			std::cerr << "Verif result : " << std::endl;
+			for (const auto &s : mOriginStock) {
+				std::cerr  << "\t" << s.first << " " << s.second << std::endl;
+			}
+			return ;
+		}
+	}
+	for (const auto &s : mOriginStock) {
+		std::cout  << s.first << " " << s.second << std::endl;
 	}
 }
 

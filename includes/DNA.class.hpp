@@ -38,10 +38,9 @@ public:
 	std::vector<Gene> & getGene() { return vGene; };
 	std::vector<Gene> getGeneCpy() { return vGene; };
 	std::vector<Gene> * getGenePtr() { return &vGene; };
-    int getMutatingNbr() { return mutatingNbr; };
 	bool getHasSelfMaintainedProduction() { return hasSelfMaintainedProduction; };
     void justMutation(int index);
-    void createFollowingGenes(int size);
+    void createFollowingGenes(int size, bool addProcess = true);
 	static bool compareGenes(Gene &first, Gene &second);
 	static bool compareCurrentStock(std::map<std::string, int> &first, std::map<std::string, int> &second);
 	static bool compareCurrentProcess(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second);
@@ -49,9 +48,9 @@ public:
 
 private:
 	bool isSelfMaintained();
-	bool hasSelfMaintainedProduction;
+
     size_t fitness;
-    int mutatingNbr;
+	bool hasSelfMaintainedProduction;
 	std::vector<std::string> vHash;
     std::vector<Gene> vGene;
 };

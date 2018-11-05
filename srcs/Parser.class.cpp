@@ -264,6 +264,12 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
             bestDNA = &dna;
         }
     }
+    int maxDelay = vProcess[0].delay;
+    for (const auto &process : vProcess) {
+        if (process.delay > maxDelay)
+            maxDelay = process.delay;
+    }
+    bestDNA->createFollowingGenes(bestDNA->getGene().size() + maxDelay, false);
     // Print solution
     // bestDNA->description();
     bestDNA->printSolution();

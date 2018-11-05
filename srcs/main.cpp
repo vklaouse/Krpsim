@@ -38,7 +38,6 @@ int main(int ac, char **av) {
 	{
 		bool verboseOption;
 		if (ac == 4) {
-			std::cout << av[1] << std::endl;
 			if (std::strcmp(av[1], "-v") == 0)
 				verboseOption = true;
 			else {
@@ -66,14 +65,11 @@ int main(int ac, char **av) {
 		errors = parser.getErrors();
 		if (printErrors(errors))
 			return 0;
-		// TODO: fix infinite loop with increasing starting stock in recre
 		// TODO: fix infinite loop with increasing starting stock in pomme
 		// TODO: do not allow process that counter one another
-		// TODO: detect infinite loop in recre -> get best loop
-		// TODO: better eval of prcess score
-		// TODO: size of DNA must never be greater than ActualCycle
-		// TODO: optimize for 'time' keyword
-		// TODO: pomme without any euros at start
+		// TODO: simplify tiers if there is only one process to get this
+
+		// TODO: better eval of process score
 		parser.runSimlation(lifeTime, verboseOption);
 	}
 	else {
