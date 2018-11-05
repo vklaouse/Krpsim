@@ -30,8 +30,6 @@ int main(int ac, char **av) {
 		if (printErrors(errors))
 			return 0;
 
-		std::cout << "-----------" << std::endl;
-
 		LexerVerif lexerVerif = LexerVerif(av[2]);
 		errors = lexerVerif.getErrors();
 		tokens = lexerVerif.getTokens();

@@ -265,8 +265,8 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
         }
     }
     // Print solution
-    bestDNA->description();
-    // bestDNA->printSolution();
+    // bestDNA->description();
+    bestDNA->printSolution();
 }
 
 size_t Parser::getGenerationFitness(int generationCycle) {
@@ -328,7 +328,6 @@ void Parser::crossOver(size_t totalFit) {
         return;
     }
 
-
     // Find on which genes the crossover can happen
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
 	compareDNAForCrossOver(actualGen[idxParentA], actualGen[idxParentB], &possibleCrossOver);
@@ -339,7 +338,8 @@ void Parser::crossOver(size_t totalFit) {
         childGen.back().justMutation(rand() % childGen.back().getGene().size());
         return;
     }
-
+	// childGen.push_back(actualGen[idxParentA]);
+	// return ;
     int random = rand() % possibleCrossOver.size();
 	size_t geneA;
     for (const auto &mapValues : possibleCrossOver) {

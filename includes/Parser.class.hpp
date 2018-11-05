@@ -4,7 +4,7 @@
 #include "DNA.class.hpp"
 
 #define POPULATION_SIZE 50
-#define DNA_SIZE 500
+#define DNA_SIZE 100
 
 #define TIERS_SECTION_START "--- Tiers ------------------------------"
 #define TIERS_SECTION_END "------------------------------ End Tiers ---"

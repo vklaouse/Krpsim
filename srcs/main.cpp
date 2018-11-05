@@ -72,7 +72,7 @@ int main(int ac, char **av) {
 		// TODO: detect infinite loop in recre -> get best loop
 		// TODO: better eval of prcess score
 		// TODO: size of DNA must never be greater than ActualCycle
-		// TODO: optimize for 'time' keyword 
+		// TODO: optimize for 'time' keyword
 		// TODO: pomme without any euros at start
 		parser.runSimlation(lifeTime, verboseOption);
 	}

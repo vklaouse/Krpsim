@@ -63,6 +63,7 @@ Lexer::Lexer(char *filePath) {
 }
 
 Lexer::~Lexer() {
+	cFileStream->close();
 	delete cFileStream;
 }
 

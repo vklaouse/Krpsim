@@ -199,10 +199,10 @@ DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), vGene(std:
     std::map<std::string, int> excessStock;
 	for (auto const &aStock : tmpGeneA.initialStock) {
 		if (tmpGeneB.initialStock.find(aStock.first) == tmpGeneB.initialStock.end()) {
-			excessStock[aStock.first] += aStock.second;
+			excessStock[aStock.first] = aStock.second;
 		}
 		else {
-			excessStock[aStock.first] += aStock.second - tmpGeneB.initialStock[aStock.first];
+			excessStock[aStock.first] = aStock.second - tmpGeneB.initialStock[aStock.first];
 		}
 	}
 
@@ -286,22 +286,16 @@ void DNA::printSolution() {
 	}
 	std::cout << "# Main Walk" << std::endl;
 	for (const auto &s : vGene) {
-		if (s.vProcess.size()) {
-			std::cout << s.actualCycle << ":";
-			for (const auto &sr : s.vProcess) {
-				// int cnt = 0;
-				for (const auto &srx : sr.second) {
-					if (srx < 0)
-						std::cout << sr.first << ":";
-						// cnt++;
-				}
-				// if (cnt > 0)
-				// 	std::cout << sr.first << ":" << cnt << ";";
+		std::cout << s.actualCycle << ":";
+		for (const auto &sr : s.vProcess) {
+			for (const auto &srx : sr.second) {
+				if (srx < 0)
+					std::cout << sr.first << ":";
 			}
-			std::cout << std::endl;
 		}
+		std::cout << std::endl;
 	}
-	
+
 }
 
 
@@ -338,6 +332,14 @@ bool DNA::compareCurrentProcess(std::map<std::string, std::vector<int>> first, s
 				return false;
 		}
 		else if (second.find(f.first) == second.end() || f.second != second[f.first])
+			return false;
+	}
+	for (const auto &f : second) {
+		if (f.second.size() == 0) {
+			if (first.find(f.first) != first.end() && first[f.first].size() != 0)
+				return false;
+		}
+		else if (first.find(f.first) == first.end() || f.second != first[f.first])
 			return false;
 	}
 	return true;
