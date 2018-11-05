@@ -4,7 +4,7 @@
 #include "DNA.class.hpp"
 
 #define POPULATION_SIZE 50
-#define DNA_SIZE 500
+#define DNA_SIZE 100
 
 #define VERBOSE_SECTION_START "--- Verbose ------------------------------"
 #define VERBOSE_SECTION_END "------------------------------ End Verbose ---"

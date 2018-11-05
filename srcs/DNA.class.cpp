@@ -210,10 +210,10 @@ DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), vGene(std:
     std::map<std::string, int> excessStock;
 	for (auto const &aStock : tmpGeneA.initialStock) {
 		if (tmpGeneB.initialStock.find(aStock.first) == tmpGeneB.initialStock.end()) {
-			excessStock[aStock.first] += aStock.second;
+			excessStock[aStock.first] = aStock.second;
 		}
 		else {
-			excessStock[aStock.first] += aStock.second - tmpGeneB.initialStock[aStock.first];
+			excessStock[aStock.first] = aStock.second - tmpGeneB.initialStock[aStock.first];
 		}
 	}
 
@@ -241,7 +241,6 @@ DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), vGene(std:
 		tmpGeneB.actualCycle = actualCycle;
 		tmpGeneB.timeElapsed = timeElapsed;
 
-
 		for (auto const &excess : excessStock) {
 			tmpGeneB.currentStock[excess.first] += excess.second;
 			tmpGeneB.initialStock[excess.first] += excess.second;
@@ -250,6 +249,34 @@ DNA::DNA(DNA &first, DNA &second, int geneA, int geneB) : fitness(0), vGene(std:
 		tmpGeneB.updateHash();
 		vGene.push_back(tmpGeneB);
 		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
+
+
+		// If, thanks to excess from parentA, we detect that we are selfMaintained -> stop parentB prematurely
+		if (isSelfMaintained()) {
+			// remove just appended data
+			vGene.pop_back();
+			vHash.pop_back();
+
+			// give stock back
+			tmpGeneB.currentStock = tmpGeneB.initialStock;
+			//remove just launched process
+			for (const auto &process : tmpGeneB.vProcess) {
+				size_t i = 0;
+				for (const auto &processDelay : process.second) {
+					if (processDelay < 0)
+						break;
+					i++;
+				}
+				if (i < process.second.size()) {
+					tmpGeneB.vProcess[process.first].erase(tmpGeneB.vProcess[process.first].begin() + i, tmpGeneB.vProcess[process.first].end());
+				}
+			}
+
+			tmpGeneB.updateHash();
+			vGene.push_back(tmpGeneB);
+			vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
+			break;
+		}
 	}
 	evalFitness();
 }
@@ -297,22 +324,18 @@ void DNA::printSolution() {
 	}
 	std::cout << "# Main Walk" << std::endl;
 	for (const auto &s : vGene) {
-		if (s.vProcess.size()) {
-			std::cout << s.actualCycle << ":";
-			for (const auto &sr : s.vProcess) {
-				// int cnt = 0;
-				for (const auto &srx : sr.second) {
-					if (srx < 0)
-						std::cout << sr.first << ":";
-						// cnt++;
-				}
-				// if (cnt > 0)
-				// 	std::cout << sr.first << ":" << cnt << ";";
+		std::cout << s.actualCycle << ":";
+		for (const auto &sr : s.vProcess) {
+			for (const auto &srx : sr.second) {
+				if (srx < 0)
+					std::cout << sr.first << ":";
 			}
-			std::cout << std::endl;
 		}
+		std::cout << std::endl;
 	}
-	
+    std::cout << "# Self mantained: " << std::boolalpha << getHasSelfMaintainedProduction() << std::endl;
+    std::cout << "# DNA length : " << getGene().size() << std::endl;
+    std::cout << "# Fitness : " << getFitness() << std::endl;
 }
 
 
@@ -351,6 +374,14 @@ bool DNA::compareCurrentProcess(std::map<std::string, std::vector<int>> first, s
 		else if (second.find(f.first) == second.end() || f.second != second[f.first])
 			return false;
 	}
+	for (const auto &f : second) {
+		if (f.second.size() == 0) {
+			if (first.find(f.first) != first.end() && first[f.first].size() != 0)
+				return false;
+		}
+		else if (first.find(f.first) == first.end() || f.second != first[f.first])
+			return false;
+	}
 	return true;
 }
 
@@ -364,10 +395,13 @@ bool DNA::compareCurrentStock(std::map<std::string, int> &first, std::map<std::s
 
 size_t DNA::evalFitness() {
 	fitness = 0;
-	for (const auto &optimizeGood : Parser::instance->getTierGoods()[0]) {
+	for (const auto &optimizeGood : Parser::instance->getGoal()) {
 		for (const auto &stock : vGene.back().currentStock) {
-			if (optimizeGood.name.compare(stock.first) == 0)
+			if (optimizeGood.name.compare(stock.first) == 0) {
 				fitness += pow(10, Parser::instance->getTierGoods().size() + 1) * stock.second;
+				if (optimizeGood.optimizeTime)
+					fitness += pow(2, Parser::instance->getTierGoods().size() + 1) * stock.second;
+			}
 		}
 	}
 	// Give lots of points if an optimize product is in stock
@@ -396,10 +430,11 @@ size_t DNA::evalFitness() {
 
 	// Give lots of point if selfMantained cycle has been found
 	if (hasSelfMaintainedProduction) {
+		fitness += pow(10, Parser::instance->getTierGoods().size() + 2);
 		fitness += pow(fitness, 2);
 	}
 
-	return fitness;
+	return fitness / (vGene.back().actualCycle + 1);
 }
 
 bool DNA::isSelfMaintained() {

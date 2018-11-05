@@ -267,9 +267,6 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
     // Print solution
     // bestDNA->description();
     bestDNA->printSolution();
-    std::cerr << "Self mantained: " << std::boolalpha << bestDNA->getHasSelfMaintainedProduction() << std::endl;
-    std::cerr << "Shortest : " << bestDNA->getGene().size() << std::endl;
-    std::cerr << "Shortest fitness : " << bestDNA->getFitness() << std::endl;
 }
 
 size_t Parser::getGenerationFitness(int generationCycle) {
@@ -291,8 +288,10 @@ size_t Parser::getGenerationFitness(int generationCycle) {
         std::cerr << " -- Generation #" << generationCycle << " --" << std::endl;
         std::cerr << "Avg DNA size: " << (totalSize / actualGen.size()) << std::endl;
         std::cerr << "Avg fitness: " << (totalFit / actualGen.size()) << std::endl;
-        std::cerr << "Shortest : " << shortestBest << std::endl;
-        std::cerr << "Shortest fitness : " << shortestFitness << std::endl;
+        if (shortestBest != std::numeric_limits<size_t>::max()) {
+            std::cerr << "Shortest : " << shortestBest << std::endl;
+            std::cerr << "Shortest fitness : " << shortestFitness << std::endl;
+        }
     }
 
     return totalFit;
@@ -359,7 +358,8 @@ void Parser::crossOver(size_t totalFit) {
         childGen.back().justMutation(rand() % childGen.back().getGene().size());
         return;
     }
-
+	// childGen.push_back(actualGen[idxParentA]);
+	// return ;
     int random = rand() % possibleCrossOver.size();
 	size_t geneA;
     for (const auto &mapValues : possibleCrossOver) {
@@ -623,7 +623,6 @@ bool Parser::sortProcessFunction(Process const& lhs, Process const& rhs) {
 
 
 void Parser::setProcessScores() {
-
     // size_t tierScore = pow(10, goodsTiers.size() - idx);
     for (size_t processIdx = 0; processIdx < vProcess.size(); processIdx++) {
         vProcess[processIdx].score = 0;

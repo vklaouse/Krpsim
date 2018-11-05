@@ -18,10 +18,13 @@ ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 		else if (tokens[i].type == cycle) {
 			std::vector<std::string> operations;
 			int j = i + 1;
+
 			for (; tokens[j].type == operation; j++) {
+				if (tokens[j].info.size() <= 0)
+					break ;
 				bool exist = false;
 				for (const auto &trueProcess : Parser::instance->getProcess()) {
-					if (trueProcess.name == tokens[j].info) {
+					if (trueProcess.name.compare(tokens[j].info) == 0	) {
 						exist = true;
 						break ;
 					}
@@ -32,33 +35,30 @@ ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 			}
 			int myInt = 0;
 			saveStrInInt(tokens[i].info, &myInt);
+			std::cerr << myInt << std::endl;
 			mProcess[myInt] = operations;
-			// if (endCycle < myInt)
-			endCycle = myInt;
-			i += j - i - 1;
+			if (endCycle < myInt)
+				endCycle = myInt;
+			i = j - 1;
 		}
 	}
-	// for (const auto &s : mStock) {
-	// 	std::cout << s.first << " " << s.second << std::endl;
-	// }
-	// std::cout << " ============= " << std::endl;
-	// for (const auto &s : mProcess) {
-	// 	std::cout <<  s.first << " ";
-	// 	for (const auto &sr : s.second) {
-	// 		std::cout <<  sr << " ";
-	// 	}
-	// 	std::cout << std::endl;
-	// }
 }
 
 void ParserVerif::checker() {
 	saveProcessWithDelay(mProcess[0]);
-	for (size_t i = 1; i < (size_t)endCycle; i++) {
+	if (endCycle == 0) {
+		for (const auto &s : mOriginStock) {
+			std::cout  << s.first << " " << s.second << std::endl;
+		}
+	}
+	for (size_t i = 1; i <= (size_t)endCycle; i++) {
 		applyDelay();
 		saveProcessWithDelay(mProcess[i]);
-	}
-	for (const auto &s : mOriginStock) {
-		std::cout << s.first << " " << s.second << std::endl;
+		if (i == (size_t)endCycle) {
+			for (const auto &s : mOriginStock) {
+				std::cout  << s.first << " " << s.second << std::endl;
+			}
+		}
 	}
 }
 
@@ -73,8 +73,6 @@ void ParserVerif::applyToStock(bool addToStock, int nbrOfApply, std::string proc
 			else {
 				for (const auto &p : trueProcess.neededStock) {
 					mOriginStock[p.first] -= p.second * nbrOfApply;
-					if (mOriginStock[p.first] < 0)
-						std::cerr << "Stock can't become negative" << std::endl;
 				}
 			}
 			break ;
@@ -84,6 +82,7 @@ void ParserVerif::applyToStock(bool addToStock, int nbrOfApply, std::string proc
 
 void ParserVerif::applyDelay() {
 	int endDelay;
+
 	for (auto process : mChecker) {
 		endDelay = 0;
 		for (size_t i = 0; i < process.second.size(); i++) {
