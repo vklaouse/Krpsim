@@ -44,6 +44,7 @@ public:
 	static bool compareGenes(Gene &first, Gene &second);
 	static bool compareCurrentStock(std::map<std::string, int> &first, std::map<std::string, int> &second);
 	static bool compareCurrentProcess(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second);
+	void printSolution();
 
 private:
     size_t fitness;

@@ -6,6 +6,15 @@
 #define POPULATION_SIZE 50
 #define DNA_SIZE 500
 
+#define TIERS_SECTION_START "--- Tiers ------------------------------"
+#define TIERS_SECTION_END "------------------------------ End Tiers ---"
+#define GOODS_RATINGS_SECTION_START "--- Goods Ratings ------------------------------"
+#define GOODS_RATINGS_SECTION_END "------------------------------ End Goods Ratings ---"
+#define PROCESS_LEADERBOARS_SECTION_START "--- Process Leaderboard ------------------------------"
+#define PROCESS_LEADERBOARS_SECTION_END "------------------------------ End Process Leaderboard ---"
+#define SIMULATION_SECTION_START "--- Simulation ------------------------------"
+#define SIMULATION_SECTION_END "------------------------------ End Simulation ---"
+
 struct Process;
 
 struct Stock {
@@ -73,7 +82,7 @@ public:
     // size_t &getRandom() { myRandom = myRandom * 3 + 1; return (size_t)(rand()); }
     size_t getRandom() { return (size_t)(rand()); }
 
-    void runSimlation(int lifeTime);
+    void runSimlation(int lifeTime, bool verboseOption);
 
 protected:
     void addToStock(std::string name, int quantity);
@@ -89,6 +98,9 @@ protected:
 	void crossOver(size_t totalFit);
     void mutation();
 	void compareDNAForCrossOver(DNA &first, DNA &second, std::map<int, std::vector<int>> *possibleCrossOver);
+    size_t getGenerationFitness(int generationCycle);
+
+    bool verboseOption;
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;

@@ -3,15 +3,17 @@
 ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 	mStock = Parser::instance->getStartStock();
 	mOriginStock = Parser::instance->getStartStock();
+	endCycle = 0;
 	for (size_t i = 0; i < tokens.size(); i++) {
 		if (tokens[i].type == stock) {
 			int myInt = 0;
-			if (saveStrInInt(tokens[i + 1].info, &myInt) && myInt != 0) {
+			saveStrInInt(tokens[i + 1].info, &myInt);
+			if (myInt >= 0) {
 				mStock[tokens[i].info] = myInt;
 				i++;
 			}
 			else
-				errors.push_back("Quantity can't be 0");
+				errors.push_back("Quantity can't be negative");
 		}
 		else if (tokens[i].type == cycle) {
 			std::vector<std::string> operations;
@@ -31,6 +33,8 @@ ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 			int myInt = 0;
 			saveStrInInt(tokens[i].info, &myInt);
 			mProcess[myInt] = operations;
+			// if (endCycle < myInt)
+			endCycle = myInt;
 			i += j - i - 1;
 		}
 	}
@@ -49,7 +53,7 @@ ParserVerif::ParserVerif(std::vector<Token> &tokens) {
 
 void ParserVerif::checker() {
 	saveProcessWithDelay(mProcess[0]);
-	for (size_t i = 1; i < 10000; i++) {
+	for (size_t i = 1; i < (size_t)endCycle; i++) {
 		applyDelay();
 		saveProcessWithDelay(mProcess[i]);
 	}

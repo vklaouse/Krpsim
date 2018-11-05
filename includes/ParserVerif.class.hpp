@@ -25,6 +25,7 @@ private:
     std::map<int, std::vector<std::string>> mProcess;
 	std::map<std::string, std::vector<int>> mChecker;
 	std::vector<std::string> errors;
+	int endCycle;
 
 
 };

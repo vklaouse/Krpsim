@@ -36,6 +36,18 @@ LexerVerif::LexerVerif(char *filePath) {
 			if (!tokenizeOperation(&sLine, i, operation))
 				continue;
 		}
+		else if ((tokenType == operation || tokenType == stock) && separatorCount == 1) {
+			// operation
+			tokenType = operation;
+			std::string operationCycle = sLine.substr(0, sLine.find(':'));
+			if (!strIsInt(operationCycle, i))
+				continue ;
+			tokens.push_back(Token(cycle, operationCycle));
+
+			sLine = sLine.substr(sLine.find(':'), sLine.size());
+			if (!tokenizeOperation(&sLine, i, operation))
+				continue;
+		}
 		else {
 			std::string phase = (tokenType == stock) ? "stock" : (tokenType == operation) ? "operation" : "optimize";
 			addError(i, "Error when fetching '" + phase + "' data");

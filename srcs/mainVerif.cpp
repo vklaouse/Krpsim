@@ -14,7 +14,7 @@ bool printErrors(std::vector<std::string> &errors) {
 }
 
 void usage() {
-	std::cerr << "./krpsim_verif file_path file_path" << std::endl;
+	std::cerr << "./krpsim_verif file_path result_to_test" << std::endl;
 }
 
 int main(int ac, char **av) {

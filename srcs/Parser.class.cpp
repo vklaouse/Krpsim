@@ -205,69 +205,85 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 		errors.push_back("Parser Error: Overflow detected (" + str + ")");
 		return false;
 	}
+    *myInt = static_cast<int>(tmpVal);
     if (tmpVal == 0) {
 		errors.push_back("Parser Error: Numbers must be strictly positives");
 		return false;
 	}
-	*myInt = static_cast<int>(tmpVal);
+	// *myInt = static_cast<int>(tmpVal);
 	return true;
 }
 
-void Parser::runSimlation(int lifeTime) {
+void Parser::runSimlation(int lifeTime, bool verboseOption) {
+    this->verboseOption = verboseOption;
+
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
     // (void)killTime;
 
+    // Set goods and process score in order to know fitness of DNAs
     createGoodsLeaderboard();
     setProcessScores();
-    // std::cout << "+++++++++++++++++++++++++" << std::endl;
-    // for (auto const &proc : vProcess) {
-    //     std::cout << proc.name << std::endl;
-    // }
+    // Sorting the process pushes Genes to prioritize most valuable ones
     std::sort(vProcess.begin(), vProcess.end(), &Parser::sortProcessFunction);
-    std::cout << "++++++++++ Process Leaderboard +++++++++++++++" << std::endl;
-    for (auto const &proc : vProcess) {
-        std::cout << proc.name << " " << proc.score << std::endl;
+    if (verboseOption) {
+        std::cout << PROCESS_LEADERBOARS_SECTION_START << std::endl;
+        for (auto const &proc : vProcess) {
+            std::cout << proc.name << ": " << proc.score << std::endl;
+        }
+        std::cout << PROCESS_LEADERBOARS_SECTION_END << std::endl;
     }
 
-    // Find best path using genetic algo
-    // 1) Create Initial population
+    // Create Initial population
     createFirstGen();
+
 	size_t totalFit;
-
     int gen = 1;
+    if (verboseOption) {
+        std::cout << SIMULATION_SECTION_START << std::endl;
+    }
     while (clock() < killTime) {
-        std::cout << "__new-gen__" << gen << std::endl;
-		totalFit = 1;
-        size_t totalSize = 0;
-        // 2) Rank solutions
-		for (auto &dna : actualGen) {
-            totalSize += dna.getGene().size();
-			totalFit += dna.getFitness();
-	    }
-        std::cout << "Avg gen size: " << (totalSize / actualGen.size()) << std::endl;
-        std::cout << "Avg fitness: " << (totalFit / actualGen.size()) << std::endl;
+        totalFit = getGenerationFitness(gen);
 
-
-        // 3) Cross Over
 		for (size_t i = 0; i < POPULATION_SIZE; i++) {
 			crossOver(totalFit);
-            // 3bis) Mutation
             mutation();
-
 		}
+
         actualGen = childGen;
         gen++;
     }
+    totalFit = getGenerationFitness(gen);
+    if (verboseOption) {
+        std::cout << SIMULATION_SECTION_END << std::endl;
+    }
 
-    // Print best path
+    // Find best path
     DNA *bestDNA = &(actualGen[0]);
     for (auto &dna : actualGen) {
         if (dna.evalFitness() > bestDNA->getFitness()) {
             bestDNA = &dna;
         }
     }
-    bestDNA->description();
-    std::cout << "TotGen: " << gen << std::endl;
+    // Print solution
+    // bestDNA->description();
+    bestDNA->printSolution();
+}
+
+size_t Parser::getGenerationFitness(int generationCycle) {
+    size_t totalFit = 1;
+    size_t totalSize = 0;
+    // 2) Rank solutions
+    for (auto &dna : actualGen) {
+        totalSize += dna.getGene().size();
+        totalFit += dna.getFitness();
+    }
+    if (verboseOption) {
+        std::cout << "Generation #" << generationCycle << std::endl;
+        std::cout << "Avg DNA size: " << (totalSize / actualGen.size()) << std::endl;
+        std::cout << "Avg fitness: " << (totalFit / actualGen.size()) << std::endl;
+    }
+
+    return totalFit;
 }
 
 void Parser::mutation() {
@@ -466,10 +482,14 @@ void Parser::createGoodsLeaderboard() {
     size_t score = 0;
     size_t tierScore = 0;
     size_t idx = 0;
-    std::cout << "--- Tiers ----------------------------------------" << std::endl;
+    if (verboseOption) {
+        std::cout << TIERS_SECTION_START << std::endl;
+    }
     for (const auto &tier : goodsTiers) {
         // Little bonus for higher tier
-        std::cout << "  --   T" << idx << "   --" << std::endl;
+        if (verboseOption) {
+            std::cout << "  --   T" << idx << "   --" << std::endl;
+        }
         tierScore = pow(goodsTiers.size() - idx, 2);
         for (const auto &good : tier) {
             score = tierScore;
@@ -481,13 +501,18 @@ void Parser::createGoodsLeaderboard() {
             tmpWantedGoods[good.name] = score;
 
             // Debug
-            std::cout << good.name << std::endl;
-            std::cout << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
-            std::cout << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
-            std::cout << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
-            std::cout << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
+            if (verboseOption) {
+                std::cout << good.name << std::endl;
+                std::cout << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
+                std::cout << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
+                std::cout << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
+                std::cout << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
+            }
         }
         idx++;
+    }
+    if (verboseOption) {
+        std::cout << TIERS_SECTION_END << std::endl;
     }
 
 
@@ -578,10 +603,13 @@ void Parser::createGoodsLeaderboard() {
         idx--;
     }
 
-    std::cout << std::endl << "--- Goods Ratings" << std::endl;
-	for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
-		std::cout << test->first << ": " << test->second << std::endl;
-	}
+    if (verboseOption) {
+        std::cout << GOODS_RATINGS_SECTION_START << std::endl;
+        for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
+            std::cout << test->first << ": " << test->second << std::endl;
+        }
+        std::cout << GOODS_RATINGS_SECTION_END << std::endl;
+    }
 }
 
 

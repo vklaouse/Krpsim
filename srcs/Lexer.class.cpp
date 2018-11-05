@@ -14,7 +14,7 @@ Lexer::Lexer(char *filePath) {
 	TokenType tokenType = stock;
 	// Parse stock
 	for (size_t i = 1; std::getline(*cFileStream, sLine); i++) {
-		std::cout << i << ": " << sLine << std::endl;
+		// std::cout << i << ": " << sLine << std::endl;
 		if (sLine.front() == '#') {
 			continue;
 		}

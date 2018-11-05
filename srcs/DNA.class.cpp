@@ -265,6 +265,32 @@ void DNA::description(bool hash) {
 	std::cout << "Fitness value : " << fitness << std::endl;
 }
 
+void DNA::printSolution() {
+	std::cout << "# Stock" << std::endl;
+	for (const auto &s : vGene.back().currentStock) {
+		std::cout << s.first << ":" << s.second << std::endl;
+	}
+	std::cout << "# Main Walk" << std::endl;
+	for (const auto &s : vGene) {
+		if (s.vProcess.size()) {
+			std::cout << s.actualCycle << ":";
+			for (const auto &sr : s.vProcess) {
+				// int cnt = 0;
+				for (const auto &srx : sr.second) {
+					if (srx < 0)
+						std::cout << sr.first << ":";
+						// cnt++;
+				}
+				// if (cnt > 0)
+				// 	std::cout << sr.first << ":" << cnt << ";";
+			}
+			std::cout << std::endl;
+		}
+	}
+	
+}
+
+
 bool DNA::compareGenes(Gene &first, Gene &second) {
 	if (!DNA::compareCurrentStock(first.initialStock, second.initialStock))
 		return false;
