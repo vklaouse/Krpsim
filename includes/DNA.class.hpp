@@ -39,6 +39,7 @@ public:
 	std::vector<Gene> getGeneCpy() { return vGene; };
 	std::vector<Gene> * getGenePtr() { return &vGene; };
     int getMutatingNbr() { return mutatingNbr; };
+	bool getHasSelfMaintainedProduction() { return hasSelfMaintainedProduction; };
     void justMutation(int index);
     void createFollowingGenes(int size);
 	static bool compareGenes(Gene &first, Gene &second);
@@ -53,5 +54,4 @@ private:
     int mutatingNbr;
 	std::vector<std::string> vHash;
     std::vector<Gene> vGene;
-    std::map<std::string, int> initialStockExpenses;
 };

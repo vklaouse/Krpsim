@@ -216,6 +216,9 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 
 void Parser::runSimlation(int lifeTime, bool verboseOption) {
     this->verboseOption = verboseOption;
+    if (verboseOption) {
+        std::cerr << VERBOSE_SECTION_START << std::endl;
+    }
 
     clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
     // (void)killTime;
@@ -226,11 +229,10 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
     // Sorting the process pushes Genes to prioritize most valuable ones
     std::sort(vProcess.begin(), vProcess.end(), &Parser::sortProcessFunction);
     if (verboseOption) {
-        std::cout << PROCESS_LEADERBOARS_SECTION_START << std::endl;
+        std::cerr << " ----- Process score -----" << std::endl;
         for (auto const &proc : vProcess) {
-            std::cout << proc.name << ": " << proc.score << std::endl;
+            std::cerr << proc.name << ": " << proc.score << std::endl;
         }
-        std::cout << PROCESS_LEADERBOARS_SECTION_END << std::endl;
     }
 
     // Create Initial population
@@ -238,9 +240,7 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
 
 	size_t totalFit;
     int gen = 1;
-    if (verboseOption) {
-        std::cout << SIMULATION_SECTION_START << std::endl;
-    }
+    // Main loop for genetic algorithm
     while (clock() < killTime) {
         totalFit = getGenerationFitness(gen);
 
@@ -254,7 +254,7 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
     }
     totalFit = getGenerationFitness(gen);
     if (verboseOption) {
-        std::cout << SIMULATION_SECTION_END << std::endl;
+        std::cerr << VERBOSE_SECTION_END << std::endl;
     }
 
     // Find best path
@@ -265,22 +265,34 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
         }
     }
     // Print solution
-    bestDNA->description();
-    // bestDNA->printSolution();
+    // bestDNA->description();
+    bestDNA->printSolution();
+    std::cerr << "Self mantained: " << std::boolalpha << bestDNA->getHasSelfMaintainedProduction() << std::endl;
+    std::cerr << "Shortest : " << bestDNA->getGene().size() << std::endl;
+    std::cerr << "Shortest fitness : " << bestDNA->getFitness() << std::endl;
 }
 
 size_t Parser::getGenerationFitness(int generationCycle) {
     size_t totalFit = 1;
     size_t totalSize = 0;
+    size_t shortestBest = std::numeric_limits<size_t>::max();
+    size_t shortestFitness = 0;
+    // size_t bestIdx = -1;
     // 2) Rank solutions
     for (auto &dna : actualGen) {
         totalSize += dna.getGene().size();
         totalFit += dna.getFitness();
+        if (dna.getHasSelfMaintainedProduction() && dna.getGene().size() < shortestBest) {
+            shortestBest = dna.getGene().size();
+            shortestFitness = dna.getFitness();
+        }
     }
     if (verboseOption) {
-        std::cout << "Generation #" << generationCycle << std::endl;
-        std::cout << "Avg DNA size: " << (totalSize / actualGen.size()) << std::endl;
-        std::cout << "Avg fitness: " << (totalFit / actualGen.size()) << std::endl;
+        std::cerr << " -- Generation #" << generationCycle << " --" << std::endl;
+        std::cerr << "Avg DNA size: " << (totalSize / actualGen.size()) << std::endl;
+        std::cerr << "Avg fitness: " << (totalFit / actualGen.size()) << std::endl;
+        std::cerr << "Shortest : " << shortestBest << std::endl;
+        std::cerr << "Shortest fitness : " << shortestFitness << std::endl;
     }
 
     return totalFit;
@@ -327,7 +339,15 @@ void Parser::crossOver(size_t totalFit) {
 	    childGen.push_back(actualGen[idxParentA]);
         return;
     }
-
+    // If only one of the two parents hasSelfMaintainedProduction then add this one
+    if (actualGen[idxParentA].getHasSelfMaintainedProduction() && !actualGen[idxParentB].getHasSelfMaintainedProduction()) {
+	    childGen.push_back(actualGen[idxParentA]);
+        return;
+    }
+    if (!actualGen[idxParentA].getHasSelfMaintainedProduction() && actualGen[idxParentB].getHasSelfMaintainedProduction()) {
+	    childGen.push_back(actualGen[idxParentB]);
+        return;
+    }
 
     // Find on which genes the crossover can happen
 	std::map<int, std::vector<int>> possibleCrossOver = std::map<int, std::vector<int>>();
@@ -479,12 +499,12 @@ void Parser::createGoodsLeaderboard() {
     size_t tierScore = 0;
     size_t idx = 0;
     if (verboseOption) {
-        std::cout << TIERS_SECTION_START << std::endl;
+        std::cerr << " ----- Tiers -----" << std::endl;
     }
     for (const auto &tier : goodsTiers) {
         // Little bonus for higher tier
         if (verboseOption) {
-            std::cout << "  --   T" << idx << "   --" << std::endl;
+            std::cerr << "  --   T" << idx << "   --" << std::endl;
         }
         tierScore = pow(goodsTiers.size() - idx, 2);
         for (const auto &good : tier) {
@@ -498,17 +518,14 @@ void Parser::createGoodsLeaderboard() {
 
             // Debug
             if (verboseOption) {
-                std::cout << good.name << std::endl;
-                std::cout << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
-                std::cout << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
-                std::cout << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
-                std::cout << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
+                std::cerr << good.name << std::endl;
+                std::cerr << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
+                std::cerr << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
+                std::cerr << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
+                std::cerr << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
             }
         }
         idx++;
-    }
-    if (verboseOption) {
-        std::cout << TIERS_SECTION_END << std::endl;
     }
 
 
@@ -581,14 +598,6 @@ void Parser::createGoodsLeaderboard() {
 
                 newWantedGoods[good.name] += bestScore;
             }
-
-            // Increase good score by mult with all of its childs
-            // std::cout << "How to get " << good.name << " --> ";
-            // for (const auto &childScore : childsScore) {
-            //     // std::cout << " |" << childScore.first << " * " << childScore.second << "| ";
-            //     newWantedGoods[good.name] += childScore.second * wantedGoods[childScore.first];
-            // }
-            // std::cout << std::endl;
         }
         // Add newWantedGoods to final map
         for (auto const &newInfo : newWantedGoods) {
@@ -600,11 +609,10 @@ void Parser::createGoodsLeaderboard() {
     }
 
     if (verboseOption) {
-        std::cout << GOODS_RATINGS_SECTION_START << std::endl;
+        std::cerr << " ----- Goods score -----" << std::endl;
         for (auto test = wantedGoods.begin(); test != wantedGoods.end(); test++) {
-            std::cout << test->first << ": " << test->second << std::endl;
+            std::cerr << test->first << ": " << test->second << std::endl;
         }
-        std::cout << GOODS_RATINGS_SECTION_END << std::endl;
     }
 }
 

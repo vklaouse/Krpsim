@@ -6,14 +6,8 @@
 #define POPULATION_SIZE 50
 #define DNA_SIZE 500
 
-#define TIERS_SECTION_START "--- Tiers ------------------------------"
-#define TIERS_SECTION_END "------------------------------ End Tiers ---"
-#define GOODS_RATINGS_SECTION_START "--- Goods Ratings ------------------------------"
-#define GOODS_RATINGS_SECTION_END "------------------------------ End Goods Ratings ---"
-#define PROCESS_LEADERBOARS_SECTION_START "--- Process Leaderboard ------------------------------"
-#define PROCESS_LEADERBOARS_SECTION_END "------------------------------ End Process Leaderboard ---"
-#define SIMULATION_SECTION_START "--- Simulation ------------------------------"
-#define SIMULATION_SECTION_END "------------------------------ End Simulation ---"
+#define VERBOSE_SECTION_START "--- Verbose ------------------------------"
+#define VERBOSE_SECTION_END "------------------------------ End Verbose ---"
 
 struct Process;
 
@@ -74,7 +68,7 @@ public:
 
     std::vector<Stock> getStock() { return vStock; };
     std::vector<Process> &getProcess() { return vProcess; };
-    std::vector<Goal> getGoal() { return vGoal; };
+    std::vector<Goal> &getGoal() { return vGoal; };
 	std::vector<std::string> &getErrors() { return errors; };
 	std::map<std::string, int> getStartStock() { return startStock; };
 	std::map<std::string, size_t> &getWantedGoods() { return wantedGoods; };
