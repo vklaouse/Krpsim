@@ -37,24 +37,25 @@ public:
 
 struct Goal {
 public:
-	Goal(std::string name, bool optimizeTime) : name(name), optimizeTime(optimizeTime) {} ;
+	Goal(std::string name, bool optimizeTime, bool isShortcut) : name(name), optimizeTime(optimizeTime), isShortcut(isShortcut) {} ;
 	~Goal() {};
 
 	std::string name;
 	bool optimizeTime;
+    bool isShortcut;
 };
 
 struct GoodInfo {
 public:
-    GoodInfo(std::string name, int timesNeededByHigherStock)
+    GoodInfo(std::string name, int timesNeededByHigherStock, bool isShortcut = false)
         : name(name), timesNeededByHigherStock(timesNeededByHigherStock), timesNeededByLowerStock(0),
-        timesNeededByTierStock(0), avgDelay(0) {};
+        timesNeededByTierStock(0), isShortcut(isShortcut) {};
     ~GoodInfo() {};
     std::string name;
     int timesNeededByHigherStock;
     int timesNeededByLowerStock;
     int timesNeededByTierStock;
-    int avgDelay;
+    bool isShortcut;
 };
 
 class Parser {
@@ -98,6 +99,7 @@ protected:
 
     std::vector<Stock> vStock;
     std::vector<Process> vProcess;
+    std::map<std::string, std::vector<std::string> > shortcutProcess; // key is T0 good that is shortcut, vector is process that must be launched to get real optimize
     std::vector<Goal> vGoal;
 	std::vector<std::string> errors;
 

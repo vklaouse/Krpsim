@@ -188,7 +188,7 @@ size_t Parser::addGoal(std::vector<Token> &tokens, size_t i) {
         errors.push_back("Parser Error: No way to have at least one '" + tokens[i].info + "' in your stocks !");
     }
     else
-        vGoal.push_back(Goal(tokens[i].info, optimizeTime));
+        vGoal.push_back(Goal(tokens[i].info, optimizeTime, false));
     return i;
 }
 
@@ -409,9 +409,118 @@ void Parser::createGoodsLeaderboard() {
 	for (auto goal = vGoal.begin(); goal != vGoal.end(); goal++) {
         oldTier.push_back(GoodInfo(goal->name, 1));
     }
+
+    // Simplify tiers if possile -> if there is only one way to produce an optimize, then the resources needed to do this good will become the optimize itself
+    shortcutProcess = std::map<std::string, std::vector<std::string>>();
+    std::map<std::string, int> neededForOptimize = std::map<std::string, int>();
+    bool hasDoneChanges;
+    bool canSkip;
+    std::string savedProcessName;
+    int processScore; // TODO: use this to better optimize shortcuts
+    do {
+        hasDoneChanges = false;
+        canSkip = false;
+        for (size_t i = 0; i < oldTier.size(); i++) {
+            // std::cout << "Index: " << i << ", good: " << oldTier[i].name << std::endl;
+            neededForOptimize.clear();
+            canSkip = false;
+            for (const auto &stockInfo : vStock) {
+                if (stockInfo.name.compare(oldTier[i].name) == 0) {
+                    for (const auto &processName : stockInfo.waysToProduce) {
+                        for (const auto &process : vProcess) {
+                            if (process.name.compare(processName) == 0) {
+                                if (neededForOptimize.empty()) {
+                                    // First time, save all needed resources
+                                    savedProcessName = process.name;
+                                    for (const auto &neededGood : process.neededStock) {
+                                        bool skipGood = false;
+                                        // Skip same tier needs
+                                        for (const auto &check : oldTier) {
+                                            if (check.name.compare(neededGood.first) == 0) {
+                                                skipGood = true;
+                                                break;
+                                            }
+                                        }
+                                        if (skipGood)
+                                            continue;
+                                        // Skip if good is both in needed and result
+                                        if (process.resultStock.find(neededGood.first) != process.resultStock.end() && process.resultStock.at(neededGood.first) == neededGood.second) {
+                                            continue;
+                                        }
+                                        neededForOptimize[neededGood.first] = neededGood.second;
+                                    }
+                                }
+                                else {
+                                    // check that needed resources are exactly the ones needed in previous process
+                                    for (const auto &neededGood : process.neededStock) {
+                                        bool skipGood = false;
+                                        // Skip same tier needs
+                                        for (const auto &check : oldTier) {
+                                            if (check.name.compare(neededGood.first) == 0) {
+                                                skipGood = true;
+                                                break;
+                                            }
+                                        }
+                                        if (skipGood)
+                                            continue;
+                                        // Skip if good is both in needed and result
+                                        if (process.resultStock.find(neededGood.first) != process.resultStock.end() && process.resultStock.at(neededGood.first) == neededGood.second) {
+                                            continue;
+                                        }
+                                        if (neededForOptimize.find(neededGood.first) == neededForOptimize.end() || neededForOptimize[neededGood.first] != neededGood.second) {
+                                            // Value not found or not the same as prev process, exit from loop and do not simplify
+                                            canSkip = true;
+                                            neededForOptimize.clear();
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        if (canSkip)
+                            break;
+                    }
+                    break;
+                }
+            }
+            if (!neededForOptimize.empty()) {
+                // Optimize good can be replaced !
+
+                // Save process shortcut
+                shortcutProcess[oldTier[i].name].insert(shortcutProcess[oldTier[i].name].begin(), oldTier[i].name);
+                shortcutProcess[neededForOptimize.at(0)] = shortcutProcess[oldTier[i].name];
+
+                // Erase from goals
+                bool optimizeTime;
+                for (size_t j = 0; j < vGoal.size(); j++) {
+                    if (vGoal[j].name.compare(oldTier[i].name) == 0) {
+                        optimizeTime = vGoal[j].optimizeTime;
+                        vGoal.erase(vGoal.begin() + j);
+                        break;
+                    }
+                }
+
+                int oldMultipier = oldTier[i].timesNeededByHigherStock; // useful if we have chain of simplify
+                // Erase from tier
+                oldTier.erase(oldTier.begin() + i);
+
+                // Fill in new values
+                for (const auto &newOptimize : neededForOptimize) {
+                    oldTier.push_back(GoodInfo(newOptimize.first, newOptimize.second * oldMultipier, true));
+                    vGoal.push_back(Goal(newOptimize.first, optimizeTime, true));
+                }
+                hasDoneChanges = true;
+
+                i--; // counters the fact that we erased the old value
+            }
+        }
+    } while (hasDoneChanges);
+
+    // Save optimize tier
     goodsTiers.push_back(oldTier);
-    std::vector<GoodInfo> newTier = std::vector<GoodInfo>();
+
     // Recursively create all other tiers
+    std::vector<GoodInfo> newTier = std::vector<GoodInfo>();
     while (true) {
         for (const auto &good : oldTier) {
             for (const auto &stockInfo : vStock) {
@@ -429,6 +538,10 @@ void Parser::createGoodsLeaderboard() {
                                 }
 
                                 for (const auto &neededGood : process.neededStock) {
+                                    // Skip if good is both in needed and result
+                                    if (process.resultStock.find(neededGood.first) != process.resultStock.end() && process.resultStock.at(neededGood.first) == neededGood.second) {
+                                        continue;
+                                    }
                                     // Check if good is already in a tier or not
                                     bool found = false;
                                     // Look in current tier
@@ -528,7 +641,8 @@ void Parser::createGoodsLeaderboard() {
                 std::cerr << "  timesNeededByHigherStock: " << good.timesNeededByHigherStock << std::endl;
                 std::cerr << "  timesNeededByTierStock: " << good.timesNeededByTierStock << std::endl;
                 std::cerr << "  timesNeededByLowerStock: " << good.timesNeededByLowerStock << std::endl;
-                std::cerr << "  avgDelay: " << good.avgDelay << " score: " << score << std::endl;
+                std::cerr << "  isShortcut: " << std::boolalpha << good.isShortcut << std::endl;
+                std::cerr << "  score: " << score << std::endl;
             }
         }
         idx++;
@@ -629,7 +743,6 @@ bool Parser::sortProcessFunction(Process const& lhs, Process const& rhs) {
 
 
 void Parser::setProcessScores() {
-    // size_t tierScore = pow(10, goodsTiers.size() - idx);
     for (size_t processIdx = 0; processIdx < vProcess.size(); processIdx++) {
         vProcess[processIdx].score = 0;
         size_t idx = 0;

@@ -395,6 +395,7 @@ bool DNA::compareCurrentStock(std::map<std::string, int> &first, std::map<std::s
 
 size_t DNA::evalFitness() {
 	fitness = 0;
+	// Give points for each optimized that has been produced
 	for (const auto &optimizeGood : Parser::instance->getGoal()) {
 		for (const auto &stock : vGene.back().currentStock) {
 			if (optimizeGood.name.compare(stock.first) == 0) {
@@ -404,14 +405,8 @@ size_t DNA::evalFitness() {
 			}
 		}
 	}
-	// Give lots of points if an optimize product is in stock
 
-	// TODO: Give some points if intermediary products are in stock (the closest the product is to the goal, the higher the points)
-
-	// Score based on current stock * rarity
-
-	// TODO: Give some points for active process
-
+	// Fitness is mainly determined by active process
 	for (const auto &startedProcess : vGene.back().vProcess) {
 		for (const auto &process : Parser::instance->getProcess()) {
 			if (process.name.compare(startedProcess.first) == 0) {
@@ -419,14 +414,6 @@ size_t DNA::evalFitness() {
 			}
 		}
 	}
-
-	// TODO: Give some points if initial stock is here but not goals
-
-	// TODO: Give max points if initial stock AND goals are here => we are in a positive loop!
-
-	// Make fitness exponential so that little improvements weight more
-	// fitness = pow(fitness, 2);
-	// std::cout << "Fitness " << fitness << std::endl;
 
 	// Give lots of point if selfMantained cycle has been found
 	if (hasSelfMaintainedProduction) {

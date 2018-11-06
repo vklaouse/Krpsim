@@ -68,6 +68,7 @@ int main(int ac, char **av) {
 		// TODO: fix infinite loop with increasing starting stock in pomme
 		// TODO: do not allow process that counter one another
 		// TODO: simplify tiers if there is only one process to get this
+		// TODO: handle if only have process that keep us far from optimize
 
 		// TODO: better eval of process score
 		parser.runSimlation(lifeTime, verboseOption);
