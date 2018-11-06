@@ -188,7 +188,7 @@ size_t Parser::addGoal(std::vector<Token> &tokens, size_t i) {
         errors.push_back("Parser Error: No way to have at least one '" + tokens[i].info + "' in your stocks !");
     }
     else
-        vGoal.push_back(Goal(tokens[i].info, optimizeTime, false));
+        vGoal.push_back(Goal(tokens[i].info, optimizeTime, false, 1));
     return i;
 }
 
@@ -228,6 +228,14 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
     setProcessScores();
     // Sorting the process pushes Genes to prioritize most valuable ones
     std::sort(vProcess.begin(), vProcess.end(), &Parser::sortProcessFunction);
+	size_t idx = 0;
+	for (idx = 0; idx < vProcess.size(); idx++) {
+		if (vProcess[idx].score == 0)
+			break;
+	}
+	if (idx != vProcess.size()) {
+		vProcess.erase(vProcess.begin() + idx, vProcess.end());
+	}
     if (verboseOption) {
         std::cerr << " ----- Process score -----" << std::endl;
         for (auto const &proc : vProcess) {
@@ -253,9 +261,6 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
         gen++;
     }
     totalFit = getGenerationFitness(gen);
-    if (verboseOption) {
-        std::cerr << VERBOSE_SECTION_END << std::endl;
-    }
 
     // Find best path
     DNA *bestDNA = &(actualGen[0]);
@@ -270,10 +275,24 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
             maxDelay = process.delay;
     }
     bestDNA->createFollowingGenes(bestDNA->getGene().size() + maxDelay, false);
+	// finishSolution(bestDNA);
     // Print solution
     // bestDNA->description();
     bestDNA->printSolution();
+    if (verboseOption) {
+        std::cerr << VERBOSE_SECTION_END << std::endl;
+    }
 }
+
+// void Parser::finishSolution(DNA *bestDNA) {
+	// for (const auto &shortcut : shortcutProcess) {
+	// 	for (const auto &process : shortcut.second) {
+	// 		while (!bestDNA->applyProcessToStock(process, &bestDNA->getGeneCpy(), 1)) {
+	// 			bestDNA->insert(bestDNA)
+	// 		}
+	// 	}
+	// }
+// }
 
 size_t Parser::getGenerationFitness(int generationCycle) {
     size_t totalFit = 1;
@@ -413,19 +432,19 @@ void Parser::createGoodsLeaderboard() {
     // Simplify tiers if possile -> if there is only one way to produce an optimize, then the resources needed to do this good will become the optimize itself
     shortcutProcess = std::map<std::string, std::vector<std::string>>();
     std::map<std::string, int> neededForOptimize = std::map<std::string, int>();
-    bool hasDoneChanges;
+    bool hasDoneChanges = true;
     bool canSkip;
     std::string savedProcessName;
     // int processScore; // TODO: use this to better optimize shortcuts
-    do {
+    while (oldTier.size() == 1 && hasDoneChanges) {
         hasDoneChanges = false;
         canSkip = false;
-        for (size_t i = 0; i < oldTier.size(); i++) {
-            // std::cout << "Index: " << i << ", good: " << oldTier[i].name << std::endl;
+        // for (size_t i = 0; i < oldTier.size(); i++) {
+            // std::cout << "Index: " << i << ", good: " << oldTier[0].name << std::endl;
             neededForOptimize.clear();
             canSkip = false;
             for (const auto &stockInfo : vStock) {
-                if (stockInfo.name.compare(oldTier[i].name) == 0) {
+                if (stockInfo.name.compare(oldTier[0].name) == 0) {
                     for (const auto &processName : stockInfo.waysToProduce) {
                         for (const auto &process : vProcess) {
                             if (process.name.compare(processName) == 0) {
@@ -487,13 +506,17 @@ void Parser::createGoodsLeaderboard() {
                 // Optimize good can be replaced !
 
                 // Save process shortcut
-                shortcutProcess[oldTier[i].name].insert(shortcutProcess[oldTier[i].name].begin(), oldTier[i].name);
+				std::vector<std::string> newVProcess = std::vector<std::string>();
+				if (shortcutProcess.find(oldTier[0].name) != shortcutProcess.end()) {
+					newVProcess = shortcutProcess[oldTier[0].name];
+				}
+				newVProcess.insert(newVProcess.begin(), savedProcessName);
 
                 // Erase from goals
                 bool optimizeTime;
                 bool isFirst = true;
                 for (size_t j = 0; j < vGoal.size(); j++) {
-                    if (vGoal[j].name.compare(oldTier[i].name) == 0) {
+                    if (vGoal[j].name.compare(oldTier[0].name) == 0) {
 
                         optimizeTime = vGoal[j].optimizeTime;
                         vGoal.erase(vGoal.begin() + j);
@@ -501,34 +524,34 @@ void Parser::createGoodsLeaderboard() {
                     }
                 }
 
-                int oldMultipier = oldTier[i].timesNeededByHigherStock; // useful if we have chain of simplify
+                int oldMultipier = oldTier[0].timesNeededByHigherStock; // useful if we have chain of simplify
                 // Fill in new values
                 for (const auto &newOptimize : neededForOptimize) {
                     if (isFirst) {
                         isFirst = false;
-                        shortcutProcess[newOptimize.first] = shortcutProcess[oldTier[i].name];
+                        shortcutProcess[newOptimize.first] = newVProcess;
                     }
                     oldTier.push_back(GoodInfo(newOptimize.first, newOptimize.second * oldMultipier, true));
-                    vGoal.push_back(Goal(newOptimize.first, optimizeTime, true));
+                    vGoal.push_back(Goal(newOptimize.first, optimizeTime, true, newOptimize.second * oldMultipier));
                 }
                 hasDoneChanges = true;
 
-                
-                oldTier.erase(oldTier.begin() + i); // Erase from tier
-                shortcutProcess.erase(oldTier[i].name);
-                i--; // counters the fact that we erased the old value
+
+				shortcutProcess.erase(oldTier[0].name);
+                oldTier.erase(oldTier.begin()); // Erase from tier
+                // i--; // counters the fact that we erased the old value
             }
-        }
-    } while (hasDoneChanges);
+        // }
+    };
     if (verboseOption) {
         std::cerr << "-------- Shortcut Process ---------" << std::endl;
         for (const auto &goodKey: shortcutProcess) {
-            std::cerr << goodKey.first << " [" << std::endl;
+            std::cerr << goodKey.first << " [";
 
             for (const auto &procName : goodKey.second) {
-                std::cerr << procName << " ";
+                std::cerr << " " << procName;
             }
-            std::cerr << "]" << std::endl;
+            std::cerr << " ]" << std::endl;
         }
     }
 
@@ -555,9 +578,9 @@ void Parser::createGoodsLeaderboard() {
 
                                 for (const auto &neededGood : process.neededStock) {
                                     // Skip if good is both in needed and result
-                                    if (process.resultStock.find(neededGood.first) != process.resultStock.end() && process.resultStock.at(neededGood.first) == neededGood.second) {
-                                        continue;
-                                    }
+                                    // if (process.resultStock.find(neededGood.first) != process.resultStock.end() && process.resultStock.at(neededGood.first) == neededGood.second) {
+                                    //     continue;
+                                    // }
                                     // Check if good is already in a tier or not
                                     bool found = false;
                                     // Look in current tier

@@ -37,12 +37,14 @@ public:
 
 struct Goal {
 public:
-	Goal(std::string name, bool optimizeTime, bool isShortcut) : name(name), optimizeTime(optimizeTime), isShortcut(isShortcut) {} ;
+	Goal(std::string name, bool optimizeTime, bool isShortcut, int timesNeededForShortcut)
+		: name(name), optimizeTime(optimizeTime), isShortcut(isShortcut), timesNeededForShortcut(timesNeededForShortcut) {} ;
 	~Goal() {};
 
 	std::string name;
 	bool optimizeTime;
     bool isShortcut;
+    int timesNeededForShortcut;
 };
 
 struct GoodInfo {

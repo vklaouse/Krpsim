@@ -6,14 +6,16 @@ Lexer::Lexer(char *filePath) {
 
 	cFileStream = new std::ifstream(filePath);
 	if (cFileStream->fail()) {
-		std::cerr << "Wrong file path -> " << filePath << std::endl;
+		addError(0, "Wrong file path");
 		return;
 	}
 
 	std::string sLine;
 	TokenType tokenType = stock;
+	bool isEmpty = true;
 	// Parse stock
 	for (size_t i = 1; std::getline(*cFileStream, sLine); i++) {
+		isEmpty = false;
 		// std::cout << i << ": " << sLine << std::endl;
 		if (sLine.front() == '#') {
 			continue;
@@ -60,6 +62,8 @@ Lexer::Lexer(char *filePath) {
 			addError(i, "Error when fetching '" + phase + "' data");
 		}
 	}
+	if (isEmpty)
+		addError(0, "Wrong file path");
 }
 
 Lexer::~Lexer() {

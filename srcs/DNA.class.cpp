@@ -171,6 +171,7 @@ void Gene::description(bool hash) const{
 
 DNA::DNA() : fitness(0), hasSelfMaintainedProduction(false), vGene (std::vector<Gene>()) {
 	vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
+	vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
 	createFollowingGenes(DNA_SIZE);
 }
 
@@ -183,6 +184,18 @@ void DNA::createFollowingGenes(int size, bool addProcess) {
 
 		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == (size_t)size) {
 			isSelfMaintained();
+			if ((size_t)size == 1) {
+				std::cerr << "VERY BAD" << std::endl;
+				exit(0);
+			}
+			if (vGene.size() != (size_t)size) {
+				for (const auto &kaka: vGene.back().vProcess) {
+					for (const auto &yu: kaka.second) {
+						std::cerr << "BAD " << yu << std::endl;
+						exit(0);
+					}
+				}
+			}
 			break ;
 		}
 		Gene newGene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, addProcess);
@@ -302,6 +315,7 @@ void DNA::justMutation(int idx) {
 	vHash.erase(vHash.begin() + idx, vHash.end());
 	if (idx == 0) {
 		vGene.push_back(Gene(0, 0, std::map<std::string, std::vector<int> >(), Parser::instance->getStartStock(), true));
+		vHash.push_back(vGene.back().currentStockHash + vGene.back().vProcessHash);
 	}
 	createFollowingGenes(vGene.size() + size);
 	evalFitness();
@@ -396,14 +410,34 @@ bool DNA::compareCurrentStock(std::map<std::string, int> &first, std::map<std::s
 size_t DNA::evalFitness() {
 	fitness = 0;
 	// Give points for each optimized that has been produced
+	bool hasCreatedEverything = true;
 	for (const auto &optimizeGood : Parser::instance->getGoal()) {
 		for (const auto &stock : vGene.back().currentStock) {
 			if (optimizeGood.name.compare(stock.first) == 0) {
-				fitness += pow(10, Parser::instance->getTierGoods().size() + 1) * stock.second;
-				if (optimizeGood.optimizeTime)
-					fitness += pow(2, Parser::instance->getTierGoods().size() + 1) * stock.second;
+				if (stock.second == 0) {
+					hasCreatedEverything = false;
+				}
+				else if (!optimizeGood.isShortcut) {
+					fitness += pow(10, Parser::instance->getTierGoods().size() + 1) * stock.second;
+					if (optimizeGood.optimizeTime)
+						fitness += pow(2, Parser::instance->getTierGoods().size() + 1) * stock.second;
+				}
+				else {
+					if (stock.second >= optimizeGood.timesNeededForShortcut) {
+						fitness += pow(10, Parser::instance->getTierGoods().size() + 1) * stock.second;
+						if (optimizeGood.optimizeTime)
+							fitness += pow(2, Parser::instance->getTierGoods().size() + 1) * stock.second;
+					}
+					else {
+						hasCreatedEverything = false;
+					}
+				}
+				break;
 			}
 		}
+	}
+	if (hasCreatedEverything) {
+		fitness += pow(10, Parser::instance->getTierGoods().size() + 4);
 	}
 
 	// Fitness is mainly determined by active process
