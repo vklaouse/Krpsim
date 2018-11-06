@@ -42,6 +42,8 @@ Gene::Gene(int actualCycle, int timeElapsed, std::map<std::string, std::vector<i
 		bool hasAddedProcess = false;
 		do {
 			for (const auto &process : vParserProcess) {
+				if (process.score == 0)
+					continue ;
 				firstCheck = true;
 				for (const auto &needStock : process.neededStock) {
 					tmpDoable = this->currentStock[needStock.first] / needStock.second;
@@ -184,18 +186,6 @@ void DNA::createFollowingGenes(int size, bool addProcess) {
 
 		if (timeElapsed == std::numeric_limits<int>::max() || vGene.size() == (size_t)size) {
 			isSelfMaintained();
-			if ((size_t)size == 1) {
-				std::cerr << "VERY BAD" << std::endl;
-				exit(0);
-			}
-			if (vGene.size() != (size_t)size) {
-				for (const auto &kaka: vGene.back().vProcess) {
-					for (const auto &yu: kaka.second) {
-						std::cerr << "BAD " << yu << std::endl;
-						exit(0);
-					}
-				}
-			}
 			break ;
 		}
 		Gene newGene(i, timeElapsed, vGene.back().vProcess, vGene.back().currentStock, addProcess);
@@ -347,7 +337,7 @@ void DNA::printSolution() {
 		}
 		std::cout << std::endl;
 	}
-    std::cout << "# Self mantained: " << std::boolalpha << getHasSelfMaintainedProduction() << std::endl;
+    std::cout << "# Self mantained: " << std::boolalpha << hasSelfMaintainedProduction << std::endl;
     std::cout << "# DNA length : " << getGene().size() << std::endl;
     std::cout << "# Fitness : " << getFitness() << std::endl;
 }
@@ -459,6 +449,9 @@ size_t DNA::evalFitness() {
 }
 
 bool DNA::isSelfMaintained() {
+	if (vGene.size() == 1) {
+		return hasSelfMaintainedProduction;
+	}
 	hasSelfMaintainedProduction = true;
 	for (const auto stock : vGene.back().initialStock) {
 		if (stock.second < vGene.front().initialStock[stock.first]) {

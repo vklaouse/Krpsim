@@ -39,6 +39,7 @@ public:
 	std::vector<Gene> getGeneCpy() { return vGene; };
 	std::vector<Gene> * getGenePtr() { return &vGene; };
 	bool getHasSelfMaintainedProduction() { return hasSelfMaintainedProduction; };
+	void setHasSelfMaintainedProduction(bool value) { hasSelfMaintainedProduction = value; };
     void justMutation(int index);
     void createFollowingGenes(int size, bool addProcess = true);
 	static bool compareGenes(Gene &first, Gene &second);

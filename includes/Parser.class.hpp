@@ -82,6 +82,8 @@ public:
     void runSimlation(int lifeTime, bool verboseOption);
 
 protected:
+	void concatGeneVector(std::vector<Gene> *myGene, std::vector<Gene> initialGene, int i);
+	void finishSolution(DNA *bestDNA);
     void addToStock(std::string name, int quantity);
     size_t addProcess(std::vector<Token> &tokens, size_t i);
     void addProcessReferenceToStock(std::string stockName, Process*newProcess);

@@ -71,8 +71,10 @@ void ParserVerif::displayResult() {
 			return ;
 		}
 	}
+	std::cout << "\tOOOOOOOOOOH YEEEEEEEAAAAAAH SUCCESS MY BOÏ !!!!" << std::endl;
+	std::cout << "Stock after " << endCycle << " cycle :" << std::endl;
 	for (const auto &s : mOriginStock) {
-		std::cout  << s.first << " " << s.second << std::endl;
+		std::cout << "\t" << s.first << " " << s.second << std::endl;
 	}
 }
 

@@ -228,14 +228,14 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
     setProcessScores();
     // Sorting the process pushes Genes to prioritize most valuable ones
     std::sort(vProcess.begin(), vProcess.end(), &Parser::sortProcessFunction);
-	size_t idx = 0;
-	for (idx = 0; idx < vProcess.size(); idx++) {
-		if (vProcess[idx].score == 0)
-			break;
-	}
-	if (idx != vProcess.size()) {
-		vProcess.erase(vProcess.begin() + idx, vProcess.end());
-	}
+	// size_t idx = 0;
+	// for (idx = 0; idx < vProcess.size(); idx++) {
+	// 	if (vProcess[idx].score == 0)
+	// 		break;
+	// }
+	// if (idx != vProcess.size()) {
+	// 	vProcess.erase(vProcess.begin() + idx, vProcess.end());
+	// }
     if (verboseOption) {
         std::cerr << " ----- Process score -----" << std::endl;
         for (auto const &proc : vProcess) {
@@ -275,7 +275,9 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
             maxDelay = process.delay;
     }
     bestDNA->createFollowingGenes(bestDNA->getGene().size() + maxDelay, false);
-	// finishSolution(bestDNA);
+	bool tmp = bestDNA->getHasSelfMaintainedProduction();
+	finishSolution(bestDNA);
+	bestDNA->setHasSelfMaintainedProduction(tmp);
     // Print solution
     // bestDNA->description();
     bestDNA->printSolution();
@@ -284,15 +286,86 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
     }
 }
 
-// void Parser::finishSolution(DNA *bestDNA) {
-	// for (const auto &shortcut : shortcutProcess) {
-	// 	for (const auto &process : shortcut.second) {
-	// 		while (!bestDNA->applyProcessToStock(process, &bestDNA->getGeneCpy(), 1)) {
-	// 			bestDNA->insert(bestDNA)
-	// 		}
-	// 	}
-	// }
-// }
+void Parser::concatGeneVector(std::vector<Gene> *myGene, std::vector<Gene> initialGene, int i) {
+	size_t fusion = 0;
+	if (verboseOption)
+		std::cerr << "Duplicating best cycle for the " << i << " time" << std::endl;
+	fusion = myGene->size();
+	myGene->insert(myGene->end(), initialGene.begin(), initialGene.end());
+	for (const auto &stk : myGene->front().initialStock) {
+		int solution = (myGene->back().initialStock[stk.first] - stk.second) * i;
+		myGene->at(myGene->size() - 1).initialStock[stk.first] += solution;
+		myGene->at(myGene->size() - 1).currentStock[stk.first] += solution;
+	}
+	for (size_t i = fusion; i < myGene->size(); i++) {
+		myGene->at(i).actualCycle += myGene->at(fusion - 1).actualCycle;
+	}
+}
+
+void Parser::finishSolution(DNA *bestDNA) {
+	Gene tmpGene;
+	// If we have enough stock to start a shortcut dont be fooled and generate resources in advance !!
+	if (bestDNA->getHasSelfMaintainedProduction()) {
+		for (const auto &shortcut : shortcutProcess) {
+			for (const auto &process : shortcut.second) {
+				int maxDelay = vProcess[0].delay;
+				std::map<std::string, int> neededStock;
+				for (const auto &process2 : vProcess) {
+					if (process2.name.compare(process) == 0) {
+						neededStock = process2.neededStock;
+						for (const auto &needed : neededStock) {
+							if (process2.resultStock.find(needed.first) != process2.resultStock.end() && process2.resultStock.at(needed.first) == needed.second) {
+								neededStock[needed.first] = 0;
+							}
+						}
+					}
+			        if (process2.delay > maxDelay)
+			            maxDelay = process2.delay;
+			    }
+				int i = 0;
+				std::vector<Gene> tmpGeneInitial = bestDNA->getGeneCpy();
+				std::map<std::string, int> createdStock;
+				bool canBreak = false;
+				while (!canBreak) {
+					// concatGeneVector
+					++i;
+					concatGeneVector(bestDNA->getGenePtr(), tmpGeneInitial, i);
+					// decrease neededStock, if all values < 0 can break loop
+					canBreak = true;
+					for (const auto & needed : neededStock) {
+						if (neededStock[needed.first] <= 0)
+							continue;
+						if (neededStock[needed.first] > (bestDNA->getGene().back().initialStock[needed.first] - bestDNA->getGene().front().initialStock[needed.first]))
+							canBreak = false;
+					}
+				}
+			}
+		}
+	}
+	// 'Normal' loop where we resources are generated along the way
+	for (const auto &shortcut : shortcutProcess) {
+		for (const auto &process : shortcut.second) {
+			tmpGene = bestDNA->getGeneCpy().back();
+			std::vector<Gene> tmpGeneInitial = bestDNA->getGeneCpy();
+			int i = 0;
+			while (!tmpGene.applyProcessToStock(process, &tmpGene.currentStock, 1)) {
+				++i;
+				concatGeneVector(bestDNA->getGenePtr(), tmpGeneInitial, i);
+				tmpGene = bestDNA->getGene().at(bestDNA->getGene().size() - 1);
+			}
+			int maxDelay = vProcess[0].delay;
+		    for (const auto &process2 : vProcess) {
+				if (process2.name.compare(process) == 0) {
+					bestDNA->getGenePtr()->back().vProcess[process].push_back(process2.delay * -1);
+				}
+		        if (process2.delay > maxDelay)
+		            maxDelay = process2.delay;
+		    }
+			bestDNA->getGenePtr()->back().applyProcessToStock(process, &bestDNA->getGenePtr()->back().currentStock, 1);
+			bestDNA->createFollowingGenes(bestDNA->getGene().size() + maxDelay, false);
+		}
+	}
+}
 
 size_t Parser::getGenerationFitness(int generationCycle) {
     size_t totalFit = 1;
