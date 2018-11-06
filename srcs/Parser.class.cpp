@@ -416,7 +416,7 @@ void Parser::createGoodsLeaderboard() {
     bool hasDoneChanges;
     bool canSkip;
     std::string savedProcessName;
-    int processScore; // TODO: use this to better optimize shortcuts
+    // int processScore; // TODO: use this to better optimize shortcuts
     do {
         hasDoneChanges = false;
         canSkip = false;
@@ -488,12 +488,13 @@ void Parser::createGoodsLeaderboard() {
 
                 // Save process shortcut
                 shortcutProcess[oldTier[i].name].insert(shortcutProcess[oldTier[i].name].begin(), oldTier[i].name);
-                shortcutProcess[neededForOptimize.at(0)] = shortcutProcess[oldTier[i].name];
 
                 // Erase from goals
                 bool optimizeTime;
+                bool isFirst = true;
                 for (size_t j = 0; j < vGoal.size(); j++) {
                     if (vGoal[j].name.compare(oldTier[i].name) == 0) {
+
                         optimizeTime = vGoal[j].optimizeTime;
                         vGoal.erase(vGoal.begin() + j);
                         break;
@@ -501,20 +502,35 @@ void Parser::createGoodsLeaderboard() {
                 }
 
                 int oldMultipier = oldTier[i].timesNeededByHigherStock; // useful if we have chain of simplify
-                // Erase from tier
-                oldTier.erase(oldTier.begin() + i);
-
                 // Fill in new values
                 for (const auto &newOptimize : neededForOptimize) {
+                    if (isFirst) {
+                        isFirst = false;
+                        shortcutProcess[newOptimize.first] = shortcutProcess[oldTier[i].name];
+                    }
                     oldTier.push_back(GoodInfo(newOptimize.first, newOptimize.second * oldMultipier, true));
                     vGoal.push_back(Goal(newOptimize.first, optimizeTime, true));
                 }
                 hasDoneChanges = true;
 
+                
+                oldTier.erase(oldTier.begin() + i); // Erase from tier
+                shortcutProcess.erase(oldTier[i].name);
                 i--; // counters the fact that we erased the old value
             }
         }
     } while (hasDoneChanges);
+    if (verboseOption) {
+        std::cerr << "-------- Shortcut Process ---------" << std::endl;
+        for (const auto &goodKey: shortcutProcess) {
+            std::cerr << goodKey.first << " [" << std::endl;
+
+            for (const auto &procName : goodKey.second) {
+                std::cerr << procName << " ";
+            }
+            std::cerr << "]" << std::endl;
+        }
+    }
 
     // Save optimize tier
     goodsTiers.push_back(oldTier);
