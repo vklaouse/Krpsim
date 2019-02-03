@@ -1,0 +1,10 @@
+tomate:10
+patate:10
+poireau:10
+moi:1
+#
+vendre_tomate:(tomate:10;moi:1):(euros:50;moi:1):10
+vendre_patate:(patate:5;moi:1):(euros:20;moi:1):10
+vendre_poireau:(poireau:10):(euros:10):20
+#
+optimize:(euros)
