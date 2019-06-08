@@ -216,11 +216,12 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 
 void Parser::runSimlation(int lifeTime, bool verboseOption) {
     this->verboseOption = verboseOption;
+	this->_lifeTime = lifeTime;
     if (verboseOption) {
         std::cerr << VERBOSE_SECTION_START << std::endl;
     }
 
-    clock_t killTime = clock() + (lifeTime * CLOCKS_PER_SEC);
+    clock_t killTime = clock() + (_lifeTime * CLOCKS_PER_SEC);
     // (void)killTime;
 
     // Set goods and process score in order to know fitness of DNAs
@@ -329,14 +330,17 @@ void Parser::finishSolution(DNA *bestDNA) {
 				while (!canBreak) {
 					// concatGeneVector
 					++i;
+					if (i == 1000)
+						break;
 					concatGeneVector(bestDNA->getGenePtr(), tmpGeneInitial, i);
 					// decrease neededStock, if all values < 0 can break loop
 					canBreak = true;
 					for (const auto & needed : neededStock) {
 						if (neededStock[needed.first] <= 0)
 							continue;
-						if (neededStock[needed.first] > (bestDNA->getGene().back().initialStock[needed.first] - bestDNA->getGene().front().initialStock[needed.first]))
+						if (neededStock[needed.first] > (bestDNA->getGene().back().initialStock[needed.first] - bestDNA->getGene().front().initialStock[needed.first])) {
 							canBreak = false;
+						}
 					}
 				}
 			}
@@ -350,6 +354,8 @@ void Parser::finishSolution(DNA *bestDNA) {
 			int i = 0;
 			while (!tmpGene.applyProcessToStock(process, &tmpGene.currentStock, 1)) {
 				++i;
+				std::cout << "hey 2" << std::endl;
+
 				concatGeneVector(bestDNA->getGenePtr(), tmpGeneInitial, i);
 				tmpGene = bestDNA->getGene().at(bestDNA->getGene().size() - 1);
 			}

@@ -114,4 +114,5 @@ protected:
     std::vector<DNA> childGen;
 
     size_t myRandom;
+	int _lifeTime;
 };

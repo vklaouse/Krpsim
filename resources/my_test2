@@ -10,4 +10,4 @@ acheter_tomate:(euros:50):(tomate:15):20
 acheter_patate:(euros:20):(patate:10):20
 acheter_poireau:(euros:50):(poireau:5):20
 #
-optimize:(euros)
+optimize:(patate)
