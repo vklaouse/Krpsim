@@ -1,5 +1,5 @@
-#include "Lexer.hpp"
-#include "Parser.hpp"
+#include "Lexer.class.hpp"
+#include "Parser.class.hpp"
 
 bool printErrors(std::vector<std::string> &errors) {
 	if (errors.size() != 0) {
@@ -65,6 +65,12 @@ int main(int ac, char **av) {
 		errors = parser.getErrors();
 		if (printErrors(errors))
 			return 0;
+		// TODO: fix infinite loop with increasing starting stock in pomme
+		// TODO: do not allow process that counter one another
+		// TODO: simplify tiers if there is only one process to get this
+		// TODO: handle if only have process that keep us far from optimize
+
+		// TODO: better eval of process score
 		parser.runSimlation(lifeTime, verboseOption);
 	}
 	else {

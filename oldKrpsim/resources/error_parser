@@ -1,0 +1,21 @@
+#
+#  Custom test: parser errors
+#
+euro:1000
+overflow:1000000000000000000000000000000000000000000000000
+#
+buy_pomme:(euro:100;pomme:700;euro:100):(pomme:700):200
+buy_citron:(euro:100):(citron:400;pomme:700;euro:100;pomme:700;euro:100):200
+buy_oeuf:(euro:10000000000000000000000000):(oeuf:100):200
+buy_farine:(euro:100):(farine:8000000000000000000000):200
+buy_beurre:(euro:100):(beurre:2000):200000000000000000000
+buy_lait:(euro:100):(lait:2000):200
+buy_lait:(euro:100):(lait:2000):200
+buy_toto:(toto:100):(lait:2000):200
+#
+#optimize:(euro;euro)
+#optimize:(euro;time)
+#optimize:(time)
+#optimize:(time;time)
+optimize:(time;toto)
+#
