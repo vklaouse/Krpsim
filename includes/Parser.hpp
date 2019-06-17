@@ -43,6 +43,7 @@ public:
 	std::string name;
 	bool optimizeTime;
 	Stock *stockToOptimize;
+	std::map<std::string, Process *> possibleProcess;
 };
 
 class Parser {
@@ -63,7 +64,7 @@ public:
 
 protected:
 	void describe();
-	void prepareGraphe(Stock &stock);
+	void prepareGraphe(Stock &stock, Goal &goal);
     void addToStock(std::string name, int quantity);
     size_t addProcess(std::vector<Token> &tokens, size_t i);
     void addProcessReferenceToStock(std::string stockName, Process*newProcess);

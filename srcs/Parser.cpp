@@ -37,27 +37,26 @@ Parser::Parser(std::vector<Token> &tokens) {
 		errors.push_back("Parser Error: Give us a Goal!");
 
 	startStock = std::map<std::string, int>();
-    for (auto it = vStock.begin(); it != vStock.end(); it++) {
+    for (auto it = vStock.begin(); it != vStock.end(); it++)
         startStock[it->name] = it->quantity;
-    }
-
 	for (auto &goal : vGoal) {
 		// Check every goals
 		for (auto &stock : vStock) {
 			// Search stock related to the goal
 			if (goal.name == stock.name) {
 				goal.stockToOptimize = &stock;
-				prepareGraphe(stock);
+				prepareGraphe(stock, goal);
 			}
 		}
 	}
 
+
 	for (size_t i = 0; i < POPULATION_SIZE; i++) {
-		vAgent.push_back(Agent(vStock));
+		vAgent.push_back(Agent(vStock, startStock));
 	}
 }
 
-void Parser::prepareGraphe(Stock &stock) {
+void Parser::prepareGraphe(Stock &stock, Goal &goal) {
 	for (auto &neededProcess : stock.waysToProduce) {
 		// search the name of the process who can product the stock
 		for (auto &process : vProcess) {
@@ -65,7 +64,13 @@ void Parser::prepareGraphe(Stock &stock) {
 			if (neededProcess == process.name
 					&& stock.processForProduce.find(process.name)
 					== stock.processForProduce.end()) {
+				if (process.resultStock.find(stock.name) != process.resultStock.end()
+						&& process.neededStock.find(stock.name) != process.neededStock.end()
+						&& process.resultStock[stock.name] <= process.neededStock[stock.name])
+					continue ;
 				stock.processForProduce[process.name] = &process;
+				if (goal.possibleProcess.find(process.name) == goal.possibleProcess.end())
+					goal.possibleProcess[process.name] = &process;
 				for (auto &processNeeded : process.neededStock) {
 					// check needed stock to execute the process
 					for (auto &neededStock : vStock) {
@@ -75,7 +80,7 @@ void Parser::prepareGraphe(Stock &stock) {
 									!= process.stockNeeded.end())
 								return ; // if already exist, stop
 							process.stockNeeded[neededStock.name] = &neededStock;
-							prepareGraphe(neededStock);
+							prepareGraphe(neededStock, goal);
 							break ;
 						}
 					}
@@ -255,11 +260,24 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 void Parser::runSimlation(int lifeTime, bool verboseOption) {
     this->verboseOption = verboseOption;
 	this->_lifeTime = lifeTime;
-    if (verboseOption)
+    if (verboseOption) {
         std::cerr << VERBOSE_SECTION_START << std::endl;
-
-	if (verboseOption)
 		describe();
+		if (!vAgent.empty())
+			vAgent[0].describe();
+	}
+
+	for (int i = 0; i < _lifeTime; i++) { // Cycle nb choose by user
+		std::cout << "---------- " << i << " ----------" << std::endl;
+		for (auto &goal : vGoal) { // search solution from goal
+			for (auto &agent : vAgent) {
+				agent.addNewStockFromEndedProcess();
+				agent.produceStock(goal.stockToOptimize, i, "", goal.possibleProcess);
+				vAgent[0].describe();
+
+			}
+		}
+	}
 
     if (verboseOption)
         std::cerr << VERBOSE_SECTION_END << std::endl;
