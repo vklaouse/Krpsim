@@ -3,8 +3,8 @@
 #include "Krpsim.hpp"
 #include "Agent.hpp"
 
-#define POPULATION_SIZE 1
-// #define DNA_SIZE 100
+#define POPULATION_SIZE 10
+#define GENERATION_NBR 10
 
 #define VERBOSE_SECTION_START "-------------- Verbose --------------"
 #define VERBOSE_SECTION_END "------------ End Verbose ------------"
@@ -70,6 +70,8 @@ protected:
     void addProcessReferenceToStock(std::string stockName, Process*newProcess);
     size_t addGoal(std::vector<Token> &tokens, size_t i);
 	bool saveStrInInt(std::string &str, int *myInt);
+	void eval(Agent &bestAgent);
+
 
     bool verboseOption;
 
@@ -80,6 +82,9 @@ protected:
 	std::vector<std::string> errors;
 
     std::map<std::string, int> startStock;
+
+	int bestVal = 0;
+	int bestCycle = 2147483647;
 
 	int _lifeTime;
 };

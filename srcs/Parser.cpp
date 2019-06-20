@@ -257,28 +257,60 @@ bool Parser::saveStrInInt(std::string &str, int *myInt) {
 	return true;
 }
 
-void Parser::runSimlation(int lifeTime, bool verboseOption) {
-    this->verboseOption = verboseOption;
-	this->_lifeTime = lifeTime;
-    if (verboseOption) {
-        std::cerr << VERBOSE_SECTION_START << std::endl;
-		describe();
-		if (!vAgent.empty())
-			vAgent[0].describe();
-	}
-
-	for (int i = 0; i < _lifeTime; i++) { // Cycle nb choose by user
-		std::cout << "---------- " << i << " ----------" << std::endl;
-		for (auto &goal : vGoal) { // search solution from goal
-			for (auto &agent : vAgent) {
-				agent.addNewStockFromEndedProcess();
-				agent.produceStock(goal.stockToOptimize, i, "", goal.possibleProcess);
-				vAgent[0].describe();
-
+void Parser::eval(Agent &bestAgent) {
+	// bestAgent.describe();
+	for (auto &agent : vAgent) {
+		if (agent.currentStock[vGoal[0].stockToOptimize->name] >= bestVal) {
+			if (agent.currentStock[vGoal[0].stockToOptimize->name] == bestVal
+					&& bestCycle >= agent.lastCycle) {
+				bestCycle = agent.lastCycle;
+				bestVal = agent.currentStock[vGoal[0].stockToOptimize->name];
+				bestAgent = agent;
+			}
+			else if (agent.currentStock[vGoal[0].stockToOptimize->name] > bestVal) {
+			// else {
+				bestCycle = agent.lastCycle;
+				bestVal = agent.currentStock[vGoal[0].stockToOptimize->name];
+				bestAgent = agent;
 			}
 		}
 	}
+	bestAgent.upgrade();
+	bestAgent.describe();
+	vAgent.clear();
+	for (int i = 0; i < POPULATION_SIZE; i++) {
+		vAgent.push_back(Agent(vStock, startStock));
+		if (i < POPULATION_SIZE / 5)
+			vAgent[i].stockMultProdWayProb = bestAgent.stockMultProdWayProb;
+	}
+}
 
+void Parser::runSimlation(int lifeTime, bool verboseOption) {
+    this->verboseOption = verboseOption;
+	this->_lifeTime = lifeTime;
+	Agent bestAgent;
+
+    if (verboseOption) {
+        std::cerr << VERBOSE_SECTION_START << std::endl;
+		describe();
+	}
+
+	for (int j = 0; j < GENERATION_NBR; j++) {
+		std::cout << "---------- Generation " << j + 1 << " ----------" << std::endl;
+		int tmp = _lifeTime;
+		if (j + 1 < GENERATION_NBR && _lifeTime > 1000)
+			tmp /= 5;
+		for (int i = 0; i < tmp; i++) { // Cycle nb choose by user
+			for (auto &agent : vAgent) {
+				if (agent.processInProgress() != 0 || i == 0) {
+					agent.lastCycle = i;
+					agent.addNewStockFromEndedProcess();
+					agent.produceStock(vGoal[0].stockToOptimize, i, "", vGoal[0].possibleProcess);
+				}
+			}
+		}
+		eval(bestAgent);
+	}
     if (verboseOption)
         std::cerr << VERBOSE_SECTION_END << std::endl;
 }

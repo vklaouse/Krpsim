@@ -8,7 +8,7 @@ O_DIR = ./objs
 
 S_DIR = ./srcs
 
-CFLAGS = -std=c++11 -stdlib=libc++ -g -Wall -Wextra -Werror -ferror-limit=2 -O3 -I includes
+CFLAGS = -std=c++11 -stdlib=libc++ -g -Wall -Wextra -Werror -ferror-limit=5 -O3 -I includes
 
 CC = g++
 
