@@ -1,5 +1,7 @@
 #include "Parser.hpp"
 
+Parser *Parser::instance;
+
 Parser::Parser(std::vector<Token> &tokens) {
 	int quantity;
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -49,8 +51,8 @@ Parser::Parser(std::vector<Token> &tokens) {
 			}
 		}
 	}
-
-
+	if (errors.size() == 0)
+        Parser::instance = this;
 	for (size_t i = 0; i < POPULATION_SIZE; i++) {
 		vAgent.push_back(Agent(vStock, startStock));
 	}
@@ -276,12 +278,38 @@ void Parser::eval(Agent &bestAgent) {
 		}
 	}
 	bestAgent.upgrade();
-	bestAgent.describe();
+	if (verboseOption)
+		bestAgent.describe();
 	vAgent.clear();
 	for (int i = 0; i < POPULATION_SIZE; i++) {
 		vAgent.push_back(Agent(vStock, startStock));
 		if (i < POPULATION_SIZE / 5)
 			vAgent[i].stockMultProdWayProb = bestAgent.stockMultProdWayProb;
+	}
+}
+
+void Parser::writeSolution(Agent &agent) {
+	std::ofstream ofs;
+	ofs.open ("soluce.txt");
+	if (ofs.is_open()) {
+		ofs << "# Final stock\n#" << std::endl;
+		for (auto &stock : agent.currentStock)
+			ofs << stock.first << ":" << stock.second << std::endl;
+		int lastCycle = 0;
+		ofs << "#\n# Process history" << std::endl;
+		for (auto &line : agent.processHistory) {
+			lastCycle = line.first;
+			ofs << line.first << ":";
+			for (auto &process : line.second)
+				ofs << process << ":";
+			ofs << "\n";
+		}
+		if (lastCycle < agent.lastCycle)
+			ofs << agent.lastCycle << ":" << "\n";
+		ofs.close();
+	}
+	else {
+		std::cerr << "Error opening file" << std::endl;
 	}
 }
 
@@ -296,7 +324,9 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
 	}
 
 	for (int j = 0; j < GENERATION_NBR; j++) {
-		std::cout << "---------- Generation " << j + 1 << " ----------" << std::endl;
+		if (verboseOption)
+			std::cerr << "---------- Generation " << j + 1 << " ----------" << std::endl;
+
 		int tmp = _lifeTime;
 		if (j + 1 < GENERATION_NBR && _lifeTime > 1000)
 			tmp /= 5;
@@ -311,6 +341,7 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
 		}
 		eval(bestAgent);
 	}
+	writeSolution(bestAgent);
     if (verboseOption)
         std::cerr << VERBOSE_SECTION_END << std::endl;
 }

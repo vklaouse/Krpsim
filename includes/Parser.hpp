@@ -49,6 +49,7 @@ public:
 class Parser {
 
 public:
+	static Parser *instance;
 
 	Parser() {};
     Parser(std::vector<Token> &tokens);
@@ -71,6 +72,7 @@ protected:
     size_t addGoal(std::vector<Token> &tokens, size_t i);
 	bool saveStrInInt(std::string &str, int *myInt);
 	void eval(Agent &bestAgent);
+	void writeSolution(Agent &agent);
 
 
     bool verboseOption;

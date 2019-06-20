@@ -7,6 +7,7 @@
 #include <map>
 #include <stdexcept>
 #include <math.h>
+#include <fstream>
 
 #define TIME_KEYWORD "time"
 #define OPTIMIZE_KEYWORD "optimize"

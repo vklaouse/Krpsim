@@ -22,5 +22,5 @@ end_dream:(dream:3):(clock:1):60
 # or maximize some products over a long delay
 # optimize:(time|stock1;time|stock2;...)
 #
-optimize:(year)
+optimize:(year;second)
 #
