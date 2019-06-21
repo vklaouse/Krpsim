@@ -2,7 +2,7 @@
 # ikea demo - krpsim
 #
 # stock      name:quantity
-planche:23
+planche:7
 #
 # process   name:(need1:qty1;need2:qty2;[...]):(result1:qty1;result2:qty2;[...]):delay
 #

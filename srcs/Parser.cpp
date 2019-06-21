@@ -326,11 +326,15 @@ void Parser::runSimlation(int lifeTime, bool verboseOption) {
 	for (int j = 0; j < GENERATION_NBR; j++) {
 		if (verboseOption)
 			std::cerr << "---------- Generation " << j + 1 << " ----------" << std::endl;
-
+		clock_t killTime = clock() + (15 * CLOCKS_PER_SEC);
 		int tmp = _lifeTime;
 		if (j + 1 < GENERATION_NBR && _lifeTime > 1000)
 			tmp /= 5;
 		for (int i = 0; i < tmp; i++) { // Cycle nb choose by user
+			if (clock() > killTime) {
+				std::cerr << "Time out." << std::endl;
+				break ;
+			}
 			for (auto &agent : vAgent) {
 				if (agent.processInProgress() != 0 || i == 0) {
 					agent.lastCycle = i;
